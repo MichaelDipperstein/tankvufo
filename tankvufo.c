@@ -1,3 +1,35 @@
+/***************************************************************************
+*                             Tank Versuses UFO
+*
+*   File    : tankvufo.c
+*   Purpose : A tribute to the Tank-V-UFO, a Commodore VIC-20 Game
+*             by Duane Later
+*   Author  : Michael Dipperstein
+*   Date    : November 26, 2006
+*
+****************************************************************************
+*
+* Tank Versuses UFO: A tribute to the Tank-V-UFO, a Commodore VIC-20 Game
+*                    by Duane Later
+* Copyright (C) 2020 by
+*       Michael Dipperstein (mdipperstein@gmail.com)
+*
+* This file is part of Tank Versuses UFO.
+*
+* Trim is free software; you can redistribute it and/or modify it under
+* the terms of the GNU General Public License as published by the Free
+* Software Foundation; either version 3 of the License, or (at your
+* option) any later version.
+*
+* Trim is distributed in the hope that it will be useful, but WITHOUT ANY
+* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+* FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+* for more details.
+*
+* You should have received a copy of the GNU General Public License along
+* with this program.  If not, see <http://www.gnu.org/licenses/>.
+*
+****************************************************************************/
 #include <locale.h>
 #include <ncurses.h>
 #include <string.h>
