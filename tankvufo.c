@@ -56,9 +56,11 @@ typedef struct
 
 typedef enum
 {
+    DIR_NONE,
     DIR_LEFT,
     DIR_RIGHT,
-    DIR_NONE
+    DIR_FALLING_LEFT,
+    DIR_FALLING_RIGHT
 } direction_t;
 
 typedef struct
@@ -69,6 +71,7 @@ typedef struct
     int shot_x;
     int shot_y;
     direction_t shot_direction;
+    int shot_hit_ground;
 } ufo_info_t;
 
 int handle_keypress(WINDOW* win, tank_info_t *tank);
@@ -77,7 +80,10 @@ int move_tank(WINDOW* win, int tank_x, direction_t direction);
 void move_ufo(WINDOW* win, ufo_info_t *ufo);
 
 void move_tank_shot(WINDOW* win, tank_info_t *tank);
+void check_tank_shot(WINDOW* win, tank_info_t *tank, ufo_info_t *ufo);
+
 void move_ufo_shot(WINDOW* win, ufo_info_t *ufo);
+void ufo_shot_hit_ground(WINDOW* win, ufo_info_t *ufo);
 
 void print_score(WINDOW* win, int tank_score, int ufo_score);
 
@@ -101,7 +107,7 @@ int main(void)
     noecho();
     curs_set(0);
 
-    /* color the background before creating a window S*/
+    /* color the background before creating a window */
     init_pair(1, COLOR_BLACK, COLOR_CYAN);
     bkgd(COLOR_PAIR(1));
 
@@ -111,7 +117,9 @@ int main(void)
 
     refresh();          /* refresh the whole screen to show the window */
 
-    wbkgd(v20_win, COLOR_PAIR(1));  /* now set the window background */
+    /* now set the window color scheme */
+    init_pair(2, COLOR_BLACK, COLOR_WHITE);
+    wbkgd(v20_win, COLOR_PAIR(2));
 
     /* print the banner */
     wprintw(v20_win, "** TANK VERSUS UFO. **");
@@ -137,6 +145,7 @@ int main(void)
     ufo_info.shot_x = 0;
     ufo_info.shot_y = 0;
     ufo_info.shot_direction = DIR_NONE;
+    ufo_info.shot_hit_ground = 0;
 
     /* add the initial score of 0 - 0 */
     print_score(v20_win, tank_score, ufo_score);
@@ -206,7 +215,23 @@ int main(void)
         move_tank_shot(v20_win, &tank_info);
         wrefresh(v20_win);
 
-        move_ufo_shot(v20_win, &ufo_info);
+        if (0 == ufo_info.shot_hit_ground)
+        {
+            /* no shot exploding */
+            move_ufo_shot(v20_win, &ufo_info);
+        }
+
+        if (tank_info.shot_y != -1)
+        {
+            /* check for ufo hit */
+            check_tank_shot(v20_win, &tank_info, &ufo_info);
+        }
+
+        if (0 != ufo_info.shot_hit_ground)
+        {
+            /* shot is exploding on the ground */
+            ufo_shot_hit_ground(v20_win, &ufo_info);
+        }
         wrefresh(v20_win);
 
         print_score(v20_win, tank_score, ufo_score);
@@ -273,7 +298,7 @@ int move_tank(WINDOW *win, int tank_x, direction_t direction)
         /* redraw without moving */
         mvwaddstr(win, V20_ROWS - 4, tank_x + 3, "▖");
         mvwaddstr(win, V20_ROWS - 3, tank_x + 1, "▁██▁");
-        mvwaddstr(win, V20_ROWS - 2, tank_x + 0, "▕OOOO▏");
+        mvwaddstr(win, V20_ROWS - 2, tank_x, "▕OOOO▏");
     }
 
     if (DIR_LEFT == direction)
@@ -288,7 +313,7 @@ int move_tank(WINDOW *win, int tank_x, direction_t direction)
         tank_x -= 1;
         mvwaddstr(win, V20_ROWS - 4, tank_x + 3, "▖ ");
         mvwaddstr(win, V20_ROWS - 3, tank_x + 1, "▁██▁ ");
-        mvwaddstr(win, V20_ROWS - 2, tank_x + 0, "▕OOOO▏ ");
+        mvwaddstr(win, V20_ROWS - 2, tank_x, "▕OOOO▏ ");
     }
 
     if (DIR_RIGHT == direction)
@@ -302,7 +327,7 @@ int move_tank(WINDOW *win, int tank_x, direction_t direction)
         /* move to the right, add a leading space to erase the old */
         mvwaddstr(win, V20_ROWS - 4, tank_x + 3, " ▖");
         mvwaddstr(win, V20_ROWS - 3, tank_x + 1, " ▁██▁");
-        mvwaddstr(win, V20_ROWS - 2, tank_x + 0, " ▕OOOO▏");
+        mvwaddstr(win, V20_ROWS - 2, tank_x, " ▕OOOO▏");
         tank_x += 1;
     }
 
@@ -431,6 +456,39 @@ void move_tank_shot(WINDOW* win, tank_info_t *tank)
     }
 }
 
+
+void check_tank_shot(WINDOW* win, tank_info_t *tank, ufo_info_t *ufo)
+{
+    const cchar_t box = {A_NORMAL, L"█", 0};
+    int dx;
+
+    if (tank->shot_y != ufo->y)
+    {
+        /* different rows, no hit */
+        return;
+    }
+
+    dx = tank->shot_x - ufo->x;
+
+    if ((dx < 0) || (dx > 2))
+    {
+        /* wide of ufo, no hit */
+        return;
+    }
+
+    /* hit */
+    mvwadd_wch(win, tank->shot_y - 1, tank->shot_x, &box);
+    mvwaddstr(win, tank->shot_y, tank->shot_x - 1, "███");
+    mvwadd_wch(win, tank->shot_y + 1, tank->shot_x, &box);
+
+    /* done with shot */
+    tank->shot_x = -1;
+    tank->shot_y = -1;
+
+    return;
+}
+
+
 #if 0
 void move_ufo_shot(WINDOW* win, ufo_info_t *ufo)
 {
@@ -554,12 +612,9 @@ void move_ufo_shot(WINDOW* win, ufo_info_t *ufo)
 
         if (V20_ROWS - 2 == ufo->shot_y)
         {
-            /* TODO: draw ground explosion */
-
             /* done with shot */
-            ufo->shot_x = -1;
-            ufo->shot_y = -1;
             ufo->shot_direction = DIR_NONE;
+            ufo->shot_hit_ground = 1;
             return;
         }
 
@@ -582,6 +637,50 @@ void move_ufo_shot(WINDOW* win, ufo_info_t *ufo)
     mvwadd_wch(win, ufo->shot_y, ufo->shot_x, &shot);
 }
 #endif
+
+void ufo_shot_hit_ground(WINDOW* win, ufo_info_t *ufo)
+{
+    const cchar_t ground = {A_NORMAL, L"▔", 0};
+
+    switch (ufo->shot_hit_ground)
+    {
+        case 1:
+            /* just lines */
+            ufo->shot_hit_ground++;
+            mvwaddstr(win, V20_ROWS - 2, ufo->shot_x - 2, "╲ │ ╱");
+            break;
+
+        case 2:
+            /* full explosion */
+            ufo->shot_hit_ground++;
+            mvwaddstr(win, V20_ROWS - 3, ufo->shot_x - 3, "•• • ••");
+            mvwaddstr(win, V20_ROWS - 2, ufo->shot_x - 2, "╲ │ ╱");
+            break;
+
+        case 3:
+            /* dots */
+            ufo->shot_hit_ground++;
+            mvwaddstr(win, V20_ROWS - 3, ufo->shot_x - 3, "•• • ••");
+            mvwaddstr(win, V20_ROWS - 2, ufo->shot_x - 2, "     ");
+            break;
+
+        case 4:
+            /* clean-up */
+            ufo->shot_hit_ground = 0;
+            mvwaddstr(win, V20_ROWS - 3, ufo->shot_x - 3, "       ");
+            mvwaddstr(win, V20_ROWS - 2, ufo->shot_x - 2, "     ");
+            ufo->shot_x = -1;
+            ufo->shot_y = -1;
+            ufo->shot_direction = DIR_NONE;
+
+            /* redraw the ground */
+            mvwhline_set(win, V20_ROWS - 1, 0, &ground, V20_COLS);
+            break;
+
+        default:
+            break;
+    }
+}
 
 
 void print_score(WINDOW* win, int tank_score, int ufo_score)
