@@ -52,6 +52,7 @@ typedef struct
     int x;
     int shot_x;
     int shot_y;
+    unsigned char shot_hit_ufo;
 } tank_info_t;
 
 typedef enum
@@ -129,11 +130,11 @@ int main(void)
     /* draw the ground */
     mvwhline_set(v20_win, V20_ROWS - 1, 0, &ground, V20_COLS);
 
-
     /* start with tank on left and no shot */
     tank_info.x = 0;
     tank_info.shot_x = -1;
     tank_info.shot_y = -1;
+    tank_info.shot_hit_ufo = 0;
 
     /* draw tank */
     move_tank(v20_win, tank_info.x, DIR_NONE);
@@ -212,27 +213,32 @@ int main(void)
         move_ufo(v20_win, &ufo_info);
         wrefresh(v20_win);
 
-        move_tank_shot(v20_win, &tank_info);
-        wrefresh(v20_win);
+        if (!tank_info.shot_hit_ufo)
+        {
+            move_tank_shot(v20_win, &tank_info);
+            wrefresh(v20_win);
+        }
 
         if (0 == ufo_info.shot_hit_ground)
         {
             /* no shot exploding */
             move_ufo_shot(v20_win, &ufo_info);
+            wrefresh(v20_win);
         }
 
         if (tank_info.shot_y != -1)
         {
             /* check for ufo hit */
             check_tank_shot(v20_win, &tank_info, &ufo_info);
+            wrefresh(v20_win);
         }
 
         if (0 != ufo_info.shot_hit_ground)
         {
             /* shot is exploding on the ground */
             ufo_shot_hit_ground(v20_win, &ufo_info);
+            wrefresh(v20_win);
         }
-        wrefresh(v20_win);
 
         print_score(v20_win, tank_score, ufo_score);
         wrefresh(v20_win);
@@ -390,7 +396,7 @@ void move_ufo(WINDOW* win, ufo_info_t *ufo)
             ufo->x++;
         }
     }
-    else
+    else if (DIR_LEFT == ufo->direction)
     {
         /* ufo is moving left */
         if (2 == ufo->x)
@@ -422,6 +428,60 @@ void move_ufo(WINDOW* win, ufo_info_t *ufo)
             mvwaddstr(win, ufo->y, ufo->x, "<*> ");
         }
     }
+    else if (DIR_FALLING_RIGHT == ufo->direction)
+    {
+        /* ufo is falling right, remove old ufo  */
+        mvwaddstr(win, ufo->y, ufo->x, "   ");
+
+        if (V20_ROWS - 2 == ufo->y)
+        {
+            /* we're at the bottom, done with this one */
+            ufo->x = 0;
+            ufo->y = 0;
+            ufo->direction = DIR_NONE;
+        }
+        else if (V20_COLS == ufo->x)
+        {
+            /* go down one row and start at left */
+            ufo->x = 0;
+            ufo->y++;
+            mvwaddstr(win, ufo->y, ufo->x, "<*>");
+        }
+        else
+        {
+            /* normal falling right move */
+            ufo->x++;
+            ufo->y++;
+            mvwaddstr(win, ufo->y, ufo->x, "<*>");
+        }
+    }
+    else if (DIR_FALLING_LEFT == ufo->direction)
+    {
+        /* ufo is falling left, remove old ufo */
+        mvwaddstr(win, ufo->y, ufo->x, "   ");
+
+        if (V20_ROWS - 2 == ufo->y)
+        {
+            /* we're at the bottom, done with this one */
+            ufo->x = 0;
+            ufo->y = 0;
+            ufo->direction = DIR_NONE;
+        }
+        else if (2 == ufo->x)
+        {
+            /* ufo is at the left edge, wrap around */
+            ufo->x = V20_COLS - 2;
+            ufo->y++;
+            mvwaddstr(win, ufo->y, ufo->x, "<*>");
+        }
+        else
+        {
+            /* normal left move */
+            ufo->x--;
+            ufo->y++;
+            mvwaddstr(win, ufo->y, ufo->x, "<*>");
+        }
+    }
 }
 
 
@@ -429,7 +489,7 @@ void move_tank_shot(WINDOW* win, tank_info_t *tank)
 {
     const cchar_t shot = {A_NORMAL, L"▪", 0};
 
-    if (tank->shot_y < 0)
+    if ((tank->shot_y < 0) || (tank->shot_hit_ufo))
     {
         return;     /* there's no shot */
     }
@@ -462,6 +522,19 @@ void check_tank_shot(WINDOW* win, tank_info_t *tank, ufo_info_t *ufo)
     const cchar_t box = {A_NORMAL, L"█", 0};
     int dx;
 
+    if (tank->shot_hit_ufo)
+    {
+        /* clear explosion shot */
+        mvwaddch(win, tank->shot_y - 1, tank->shot_x, ' ');
+        mvwaddstr(win, tank->shot_y, tank->shot_x - 1, "   ");
+        mvwaddch(win, tank->shot_y + 1, tank->shot_x, ' ');
+
+        tank->shot_x = -1;
+        tank->shot_y = -1;
+        tank->shot_hit_ufo = 0;
+        return;
+    }
+
     if (tank->shot_y != ufo->y)
     {
         /* different rows, no hit */
@@ -477,13 +550,19 @@ void check_tank_shot(WINDOW* win, tank_info_t *tank, ufo_info_t *ufo)
     }
 
     /* hit */
+    tank->shot_hit_ufo = 1;
     mvwadd_wch(win, tank->shot_y - 1, tank->shot_x, &box);
     mvwaddstr(win, tank->shot_y, tank->shot_x - 1, "███");
     mvwadd_wch(win, tank->shot_y + 1, tank->shot_x, &box);
 
-    /* done with shot */
-    tank->shot_x = -1;
-    tank->shot_y = -1;
+    if (DIR_LEFT == ufo->direction)
+    {
+        ufo->direction = DIR_FALLING_LEFT;
+    }
+    else if (DIR_RIGHT == ufo->direction)
+    {
+        ufo->direction = DIR_FALLING_RIGHT;
+    }
 
     return;
 }
