@@ -5,7 +5,7 @@
 *   Purpose : A tribute to the Tank-V-UFO, a Commodore VIC-20 Game
 *             by Duane Later
 *   Author  : Michael Dipperstein
-*   Date    : November 26, 2006
+*   Date    : November 26, 2020
 *
 ****************************************************************************
 *
@@ -38,6 +38,9 @@
 #include <sys/timerfd.h>
 #include <sys/poll.h>
 #include <unistd.h>
+#include <errno.h>
+
+#include "sounds.h"
 
 /* cchar_t for unicode charaters used in this program */
 static const cchar_t GROUND_CHAR = {WA_NORMAL, L"▔", 0};
@@ -62,6 +65,9 @@ static const int TANK_SHOT_START_ROW = TANK_GUN_ROW - 1;
 static const int UFO_BOTTOM = TANK_SHOT_START_ROW - 2;
 static const int UFO_TOP = SCORE_ROW + 2;
 
+static const float VOLUME = 0.5;        /* base volume for sounds */
+static const int FALL_FREQ = 441;       /* base frequency for falling ufo */
+
 /* movement directions used by tank, ufo, and ufo shots */
 typedef enum
 {
@@ -84,6 +90,7 @@ typedef struct
     bool shot_hit_ufo;          /* true if the ufo was just hit (+ displayed) */
     uint8_t on_fire;            /* 0 when not on fire, otherwise flame count */
 } tank_info_t;
+
 
 /* struct containing ufo related data */
 typedef struct
@@ -126,6 +133,10 @@ int main(void)
     int tfd;
     struct itimerspec timeout;
     struct pollfd pfd;
+
+    /* used by sound library */
+    sound_data_t sound_data;
+    sound_error_t sound_error;
 
     /* ncurses initialization */
     setlocale(LC_ALL, "");
@@ -186,6 +197,34 @@ int main(void)
 
     wtimeout(v20_win, 0);               /* make wgetch non-blocking */
     srand((unsigned int)time(NULL));    /* seed the random number generator */
+
+    /* initialize all of the sound stuff */
+    sound_error = initialize_sounds();
+
+    if (0 != sound_error)
+    {
+        delwin(v20_win);
+        endwin();
+        handle_error(sound_error);
+        return sound_error;
+    }
+
+    if (0 != initialize_sine_wave(&sound_data, FALL_FREQ, VOLUME))
+    {
+        delwin(v20_win);
+        endwin();
+        perror("initializing sine wave");
+        return(errno);
+    }
+
+    sound_error = create_sine_stream(&sound_data);
+    if (0 != sound_error)
+    {
+        delwin(v20_win);
+        endwin();
+        handle_error(sound_error);
+        return sound_error;
+    }
 
     /* create a timer fd that expires every 200ms */
     tfd = timerfd_create(CLOCK_MONOTONIC,0);
@@ -249,6 +288,17 @@ int main(void)
         ufo_score += move_tank(v20_win, &tank_info);
         tank_score += move_ufo(v20_win, &ufo_info);
 
+        if ((DIR_FALLING_LEFT == ufo_info.direction) ||
+            (DIR_FALLING_RIGHT == ufo_info.direction))
+        {
+            frequecy_toggle(&sound_data);
+        }
+        else if ((DIR_LANDED == ufo_info.direction) &&
+            (FREQ_OFF != sound_data.freq))
+        {
+            frequecy_off(&sound_data);
+        }
+
         if (!tank_info.shot_hit_ufo)
         {
             move_tank_shot(v20_win, &tank_info);
@@ -265,6 +315,18 @@ int main(void)
         {
             /* check for ufo hit */
             check_tank_shot(v20_win, &tank_info, &ufo_info);
+
+            if (true == tank_info.shot_hit_ufo)
+            {
+                /* start the ufo falling sound */
+                frequecy_low(&sound_data);
+                sound_error = restart_stream(&sound_data);
+                if (0 != sound_error)
+                {
+                    handle_error(sound_error);
+                    break;
+                }
+            }
         }
 
         if (0 != ufo_info.shot_hit_ground)
@@ -292,6 +354,8 @@ int main(void)
 
     delwin(v20_win);
     endwin();
+    close_stream(&sound_data);
+    end_sounds();
     return 0;
 }
 
