@@ -3,9 +3,8 @@
 ############################################################################
 CC = gcc
 LD = gcc
-CFLAGS = -Wall -Wextra `ncursesw6-config --cflags` \
-	`pkg-config portaudio-2.0 --cflags`
-LDFLAGS = `ncursesw6-config --libs` `pkg-config portaudio-2.0 --libs`
+CFLAGS = -Wall -Wextra `pkg-config ncursesw portaudio-2.0 --cflags`
+LDFLAGS = `pkg-config ncursesw portaudio-2.0 --libs`
 
 all:	tankvufo
 
