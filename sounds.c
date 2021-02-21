@@ -37,18 +37,17 @@
 #include <fcntl.h>
 #include <math.h>
 #include "sounds.h"
+#include "sound_data.h"
 
 #ifndef M_PI
 #define M_PI                (3.14159265)
 #endif
 
-#define SAMPLE_RATE         (44100)
-
 /* This routine will be called by the PortAudio engine when audio is needed.
 ** It may called at interrupt level on some machines so don't do anything
 ** that could mess up the system like calling malloc() or free().
 */
-static int sine_callback(const void *inputBuffer,
+static int sound_callback(const void *inputBuffer,
     void *outputBuffer,
     unsigned long framesPerBuffer,
     const PaStreamCallbackTimeInfo* timeInfo,
@@ -58,31 +57,70 @@ static int sine_callback(const void *inputBuffer,
     sound_data_t *data = (sound_data_t*)userData;
     float *out = (float*)outputBuffer;
     unsigned long i;
+    int data_length;
 
     /* Prevent unused variable warnings. */
     (void)timeInfo;         /* doesn't work with PulseAudio */
     (void)statusFlags;
     (void)inputBuffer;
 
-    if (FREQ_OFF == data->freq)
+    if (SOUND_OFF == data->sound)
     {
+        data->phase = 0;
         return paComplete;
     }
 
-    for(i=0; i < framesPerBuffer; i++)
+    if ((SOUND_LOW_FREQ == data->sound) ||  (SOUND_HIGH_FREQ == data->sound))
     {
-        /* left channel output then right channel output */
-        *out = data->table[data->phase];
-        out++;
-        *out = data->table[data->phase];
-        out++;
+        /* this is the sound for a falling UFO */
+        data_length = sizeof(ufo_falling) / sizeof(ufo_falling[0]);
 
-        /* shift to next phase of wave based on frequency */
-        data->phase += data->freq;
-
-        if(data->phase >= data->tableSize)
+        for(i=0; i < framesPerBuffer; i++)
         {
-            data->phase -= data->tableSize;
+            /* left channel output then right channel output */
+            *out = data->volume * ufo_falling[data->phase];
+            out++;
+            *out = data->volume * ufo_falling[data->phase];
+            out++;
+
+            /* shift to next phase of wave based on frequency */
+            if (SOUND_HIGH_FREQ == data->sound)
+            {
+                data->phase += 2;
+            }
+            else
+            {
+                data->phase++;
+            }
+
+            if(data->phase >= data_length)
+            {
+                data->phase -= data_length;
+            }
+        }
+    }
+    else if (SOUND_TANK_SHOT == data->sound)
+    {
+        /* this is the sound for a tank shot */
+        data_length = sizeof(shot_sound) / sizeof(shot_sound[0]);
+
+        for(i=0; i < framesPerBuffer; i++)
+        {
+            /* left channel output then right channel output */
+            *out = shot_sound[data->phase];
+            out++;
+            *out = shot_sound[data->phase + 1];
+            out++;
+
+            /* shift to next phase of wave based on frequency */
+            data->phase += 2;
+
+            if(data->phase >= data_length)
+            {
+                data->phase = 0;
+                data->sound = SOUND_OFF;
+                return paComplete;
+            }
         }
     }
 
@@ -127,45 +165,22 @@ void end_sounds(void)
 }
 
 
-int initialize_sine_wave(sound_data_t *data, int freq, float volume)
-{
-    int i;
-
-    data->tableSize = SAMPLE_RATE / freq;
-    data->table = malloc(data->tableSize * sizeof(float));
-
-    if (NULL == data->table)
-    {
-        return errno;
-    }
-
-    /* create sinusoidal wave table for the specified frequency */
-    for(i = 0; i < data->tableSize; i++)
-    {
-        data->table[i] = volume *
-            (float)sin(((double)i/(double)data->tableSize) * M_PI * 2.0);
-    }
-
-    data->phase = 0;
-    data->freq = FREQ_LOW;
-    data->stream = NULL;
-
-    return 0;
-}
-
-
-sound_error_t create_sine_stream(sound_data_t *data)
+int create_sound_stream(sound_data_t *data, float volume)
 {
     sound_error_t err;
 
+    data->volume = volume;
+    data->phase = 0;
+    data->sound = SOUND_OFF;
+
     err = Pa_OpenDefaultStream(&(data->stream), 0, 2, paFloat32, SAMPLE_RATE,
-        paFramesPerBufferUnspecified, sine_callback, data);
+        paFramesPerBufferUnspecified, sound_callback, data);
 
     return err;
 }
 
 
-sound_error_t restart_stream(sound_data_t *data)
+sound_error_t restart_sound_stream(sound_data_t *data)
 {
     PaError result;
 
@@ -188,43 +203,48 @@ sound_error_t restart_stream(sound_data_t *data)
     }
 
     result = Pa_StartStream(data->stream);
+    data->phase = 0;
+
     return result;
 }
 
 
-sound_error_t close_stream(sound_data_t *data)
+sound_error_t close_sound_stream(sound_data_t *data)
 {
-    free(data->table);
     return Pa_CloseStream(data->stream);
 }
 
 
-void frequecy_off(sound_data_t *data)
+void select_sound(sound_data_t *data, sound_t sound)
 {
-    data->freq = FREQ_OFF;
-}
+    data->sound = sound;
 
-
-void frequecy_low(sound_data_t *data)
-{
-    data->freq = FREQ_LOW;
-}
-
-
-void frequecy_high(sound_data_t *data)
-{
-    data->freq = FREQ_HIGH;
-}
-
-
-void frequecy_toggle(sound_data_t *data)
-{
-    if (FREQ_LOW == data->freq)
+    if (SOUND_OFF == sound)
     {
-        data->freq = FREQ_HIGH;
+        data->phase = 0;
+        Pa_AbortStream(data->stream);
     }
-    else if (FREQ_HIGH == data->freq)
+}
+
+
+void next_ufo_sound(sound_data_t *data, int falling)
+{
+    if (falling)
     {
-        data->freq = FREQ_LOW;
+        /* falling is high or low frequency */
+        if (SOUND_LOW_FREQ == data->sound)
+        {
+            select_sound(data, SOUND_HIGH_FREQ);
+        }
+        else
+        {
+            select_sound(data, SOUND_LOW_FREQ);
+        }
+    }
+    else if ((SOUND_LOW_FREQ == data->sound) ||
+        (SOUND_HIGH_FREQ == data->sound))
+    {
+        /* not falling, turn off sound that is playing */
+        select_sound(data, SOUND_OFF);
     }
 }

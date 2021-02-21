@@ -66,7 +66,6 @@ static const int UFO_BOTTOM = TANK_SHOT_START_ROW - 2;
 static const int UFO_TOP = SCORE_ROW + 2;
 
 static const float VOLUME = 0.5;        /* base volume for sounds */
-static const int FALL_FREQ = 441;       /* base frequency for falling ufo */
 
 /* movement directions used by tank, ufo, and ufo shots */
 typedef enum
@@ -209,15 +208,7 @@ int main(void)
         return sound_error;
     }
 
-    if (0 != initialize_sine_wave(&sound_data, FALL_FREQ, VOLUME))
-    {
-        delwin(v20_win);
-        endwin();
-        perror("initializing sine wave");
-        return(errno);
-    }
-
-    sound_error = create_sine_stream(&sound_data);
+    sound_error = create_sound_stream(&sound_data, VOLUME);
     if (0 != sound_error)
     {
         delwin(v20_win);
@@ -285,23 +276,44 @@ int main(void)
             break;
         }
 
+        if (TANK_SHOT_START_ROW == tank_info.shot_y)
+        {
+            /* tank just shot, play sound */
+            select_sound(&sound_data, SOUND_TANK_SHOT);
+            sound_error = restart_sound_stream(&sound_data);
+            if (0 != sound_error)
+            {
+                handle_error(sound_error);
+                break;
+            }
+        }
+
         ufo_score += move_tank(v20_win, &tank_info);
         tank_score += move_ufo(v20_win, &ufo_info);
 
         if ((DIR_FALLING_LEFT == ufo_info.direction) ||
             (DIR_FALLING_RIGHT == ufo_info.direction))
         {
-            frequecy_toggle(&sound_data);
+            next_ufo_sound(&sound_data, true);
         }
-        else if ((DIR_LANDED == ufo_info.direction) &&
-            (FREQ_OFF != sound_data.freq))
+        else if (DIR_LANDED == ufo_info.direction)
         {
-            frequecy_off(&sound_data);
+            next_ufo_sound(&sound_data, false);
         }
 
         if (!tank_info.shot_hit_ufo)
         {
+            int prev_shot_pos;
+
+            prev_shot_pos = tank_info.shot_y;
             move_tank_shot(v20_win, &tank_info);
+
+            if ((-1 != prev_shot_pos) && (-1 == tank_info.shot_y))
+            {
+                /* shot went off of the screen */
+                select_sound(&sound_data, SOUND_OFF);
+            }
+
         }
 
         if ((DIR_NONE != ufo_info.shot_direction) &&
@@ -319,8 +331,8 @@ int main(void)
             if (true == tank_info.shot_hit_ufo)
             {
                 /* start the ufo falling sound */
-                frequecy_low(&sound_data);
-                sound_error = restart_stream(&sound_data);
+                next_ufo_sound(&sound_data, true);
+                sound_error = restart_sound_stream(&sound_data);
                 if (0 != sound_error)
                 {
                     handle_error(sound_error);
@@ -354,7 +366,7 @@ int main(void)
 
     delwin(v20_win);
     endwin();
-    close_stream(&sound_data);
+    close_sound_stream(&sound_data);
     end_sounds();
     return 0;
 }

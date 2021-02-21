@@ -14,7 +14,7 @@ tankvufo:	tankvufo.o sounds.o
 tankvufo.o:	tankvufo.c sounds.h
 		$(CC) $(CFLAGS) -c $< -o $@
 
-sounds.o:	sounds.c sounds.h
+sounds.o:	sounds.c sounds.h sound_data.h
 		$(CC) -c $< -Wall -Wextra `pkg-config portaudio-2.0 --cflags` -o $@
 
 clean:
