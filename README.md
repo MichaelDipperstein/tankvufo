@@ -24,6 +24,7 @@ GNU GPL.
 | ---        | ---      |
 | Makefile   | GNU Makefile for this project (assumes gcc compiler and pkg-config) |
 | README.MD  | This file |
+| sound_data.h | Header with arrays defining sound effcets |
 | sounds.h   | C header for sound effect functions |
 | sounds.c   | Sound effects implemented using PortAudio |
 | tankvufo.c | C source to handle all of the game logic |
