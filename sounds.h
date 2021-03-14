@@ -34,13 +34,15 @@
 #define  __SOUNDS_H
 
 #include <portaudio.h>
+static const int SAMPLE_RATE = 44100;
 
 typedef enum
 {
     SOUND_OFF,          /* off */
     SOUND_LOW_FREQ,     /* normal ufo falling frequency */
     SOUND_HIGH_FREQ,    /* 2x ufo falling frequency */
-    SOUND_TANK_SHOT     /* tank shot explosion */
+    SOUND_TANK_SHOT,    /* tank shot explosion */
+    SOUND_ON_FIRE,      /* tank or ufo on fire */
 } sound_t;
 
 
@@ -64,6 +66,6 @@ sound_error_t restart_sound_stream(sound_data_t *data);
 sound_error_t close_sound_stream(sound_data_t *data);
 
 void select_sound(sound_data_t *data, sound_t sound);
-void next_ufo_sound(sound_data_t *data, int falling);
+void next_ufo_sound(sound_data_t *data);
 
 #endif /* ndef  __SOUNDS_H */

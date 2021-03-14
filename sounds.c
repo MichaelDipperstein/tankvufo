@@ -109,11 +109,33 @@ static int sound_callback(const void *inputBuffer,
             /* left channel output then right channel output */
             *out = shot_sound[data->phase];
             out++;
-            *out = shot_sound[data->phase + 1];
+            *out = shot_sound[data->phase];
             out++;
 
-            /* shift to next phase of wave based on frequency */
-            data->phase += 2;
+            data->phase++;
+
+            if(data->phase >= data_length)
+            {
+                data->phase = 0;
+                data->sound = SOUND_OFF;
+                return paComplete;
+            }
+        }
+    }
+    else if (SOUND_ON_FIRE == data->sound)
+    {
+        /* this is the sound of a tank or ufo on fire */
+        data_length = sizeof(on_fire) / sizeof(on_fire[0]);
+
+        for(i=0; i < framesPerBuffer; i++)
+        {
+            /* left channel output then right channel output */
+            *out = on_fire[data->phase];
+            out++;
+            *out = on_fire[data->phase];
+            out++;
+
+            data->phase++;
 
             if(data->phase >= data_length)
             {
@@ -227,24 +249,15 @@ void select_sound(sound_data_t *data, sound_t sound)
 }
 
 
-void next_ufo_sound(sound_data_t *data, int falling)
+void next_ufo_sound(sound_data_t *data)
 {
-    if (falling)
+    /* falling is high or low frequency */
+    if (SOUND_LOW_FREQ == data->sound)
     {
-        /* falling is high or low frequency */
-        if (SOUND_LOW_FREQ == data->sound)
-        {
-            select_sound(data, SOUND_HIGH_FREQ);
-        }
-        else
-        {
-            select_sound(data, SOUND_LOW_FREQ);
-        }
+        select_sound(data, SOUND_HIGH_FREQ);
     }
-    else if ((SOUND_LOW_FREQ == data->sound) ||
-        (SOUND_HIGH_FREQ == data->sound))
+    else
     {
-        /* not falling, turn off sound that is playing */
-        select_sound(data, SOUND_OFF);
+        select_sound(data, SOUND_LOW_FREQ);
     }
 }

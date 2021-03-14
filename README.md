@@ -24,10 +24,13 @@ GNU GPL.
 | ---        | ---      |
 | Makefile   | GNU Makefile for this project (assumes gcc compiler and pkg-config) |
 | README.MD  | This file |
-| sound_data.h | Header with arrays defining sound effcets |
+| sound_data.h | Header including all sound effects |
 | sounds.h   | C header for sound effect functions |
 | sounds.c   | Sound effects implemented using PortAudio |
 | tankvufo.c | C source to handle all of the game logic |
+| on_fire.h  | Definition of fire sound effect |
+| tank_shot.h | Definition of tank shot sound effect |
+| ufo_falling.h | Definition of ufo falling sound effect |
 
 ## Building
 To build these files with GNU make and gcc:
@@ -64,12 +67,19 @@ The Q key may be used to quit the game.
 * Removed ncursesw6-config from the Makefile
 * Added this README file
 
+03/13/21
+* Added on fire sound effect
+* New tank shot sound effect
+* Each sound now exits in its own file
+* Tank and UFO data structures now contain pointers to sound data
+** Sounds are updated when the event that triggers then happens
+
 ## TODO
-- Add sound for burning tank and UFO
-- Add sound for shots fired
+- Handle overlapping tank and UFO fires
 
 ## BUGS
-- No known bugs
+- Sometimes spay from UFO shot hitting the ground doesn't clear
+
 
 ## AUTHOR
 Michael Dipperstein (mdipperstein@gmail.com)

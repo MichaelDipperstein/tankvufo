@@ -88,6 +88,7 @@ typedef struct
     int shot_y;                 /* y coordinate of tank shot */
     bool shot_hit_ufo;          /* true if the ufo was just hit (+ displayed) */
     uint8_t on_fire;            /* 0 when not on fire, otherwise flame count */
+    sound_data_t *sound_data;
 } tank_info_t;
 
 
@@ -102,6 +103,7 @@ typedef struct
     int shot_y;                 /* y coordinate of ufo shot */
     direction_t shot_direction; /* direction the ufo shot is moving */
     uint8_t shot_hit_ground;    /* 0 if false, otherwise phase of explosion */
+    sound_data_t *sound_data;
 } ufo_info_t;
 
 int handle_keypress(WINDOW* win, tank_info_t *tank);
@@ -217,6 +219,9 @@ int main(void)
         return sound_error;
     }
 
+    tank_info.sound_data = &sound_data;
+    ufo_info.sound_data = &sound_data;
+
     /* create a timer fd that expires every 200ms */
     tfd = timerfd_create(CLOCK_MONOTONIC,0);
 
@@ -248,7 +253,6 @@ int main(void)
     pfd.events = POLLIN;
     pfd.revents = 0;
 
-
     /*
      * This is the event loop that makes the game work.
      * The timerfd expires every 200ms and starts the loop.
@@ -276,44 +280,12 @@ int main(void)
             break;
         }
 
-        if (TANK_SHOT_START_ROW == tank_info.shot_y)
-        {
-            /* tank just shot, play sound */
-            select_sound(&sound_data, SOUND_TANK_SHOT);
-            sound_error = restart_sound_stream(&sound_data);
-            if (0 != sound_error)
-            {
-                handle_error(sound_error);
-                break;
-            }
-        }
-
         ufo_score += move_tank(v20_win, &tank_info);
         tank_score += move_ufo(v20_win, &ufo_info);
 
-        if ((DIR_FALLING_LEFT == ufo_info.direction) ||
-            (DIR_FALLING_RIGHT == ufo_info.direction))
-        {
-            next_ufo_sound(&sound_data, true);
-        }
-        else if (DIR_LANDED == ufo_info.direction)
-        {
-            next_ufo_sound(&sound_data, false);
-        }
-
         if (!tank_info.shot_hit_ufo)
         {
-            int prev_shot_pos;
-
-            prev_shot_pos = tank_info.shot_y;
             move_tank_shot(v20_win, &tank_info);
-
-            if ((-1 != prev_shot_pos) && (-1 == tank_info.shot_y))
-            {
-                /* shot went off of the screen */
-                select_sound(&sound_data, SOUND_OFF);
-            }
-
         }
 
         if ((DIR_NONE != ufo_info.shot_direction) &&
@@ -327,18 +299,6 @@ int main(void)
         {
             /* check for ufo hit */
             check_tank_shot(v20_win, &tank_info, &ufo_info);
-
-            if (true == tank_info.shot_hit_ufo)
-            {
-                /* start the ufo falling sound */
-                next_ufo_sound(&sound_data, true);
-                sound_error = restart_sound_stream(&sound_data);
-                if (0 != sound_error)
-                {
-                    handle_error(sound_error);
-                    break;
-                }
-            }
         }
 
         if (0 != ufo_info.shot_hit_ground)
@@ -413,9 +373,20 @@ int handle_keypress(WINDOW* win, tank_info_t *tank)
             /* shoot */
             if ((tank->shot_y == -1) && (!tank->on_fire))
             {
+                sound_error_t sound_error;
+
                 /* there isn't a shot, so take it */
                 tank->shot_y = TANK_SHOT_START_ROW;
                 tank->shot_x = tank->x + 3;
+
+                /* play sound */
+                select_sound(tank->sound_data, SOUND_TANK_SHOT);
+                sound_error = restart_sound_stream(tank->sound_data);
+
+                if (0 != sound_error)
+                {
+                    handle_error(sound_error);
+                }
             }
             break;
 
@@ -442,6 +413,7 @@ uint8_t move_tank(WINDOW* win, tank_info_t *tank)
         mvwaddstr(win, TANK_TREAD_ROW, tank->x, "      ");
         tank->x = 0;
         score = 1;
+        select_sound(tank->sound_data, SOUND_OFF);
     }
 
     if (tank->on_fire)
@@ -628,6 +600,11 @@ uint8_t move_ufo(WINDOW* win, ufo_info_t *ufo)
                 /* we're at the bottom, done with this one */
                 ufo->direction = DIR_LANDED;
                 ufo->ufo_hit_ground = 0;
+                select_sound(ufo->sound_data, SOUND_ON_FIRE);
+            }
+            else
+            {
+                next_ufo_sound(ufo->sound_data);
             }
             break;
 
@@ -655,6 +632,11 @@ uint8_t move_ufo(WINDOW* win, ufo_info_t *ufo)
                 /* we're at the bottom, done with this one */
                 ufo->direction = DIR_LANDED;
                 ufo->ufo_hit_ground = 0;
+                select_sound(ufo->sound_data, SOUND_ON_FIRE);
+            }
+            else
+            {
+                next_ufo_sound(ufo->sound_data);
             }
             break;
 
@@ -668,6 +650,9 @@ uint8_t move_ufo(WINDOW* win, ufo_info_t *ufo)
 
                 /* redraw the ground */
                 mvwhline_set(win, V20_ROWS - 1, 0, &GROUND_CHAR, V20_COLS);
+
+                /* stop the fire sound */
+                select_sound(ufo->sound_data, SOUND_OFF);
 
                 score = 1;          /* credit tank with kill */
             }
@@ -734,6 +719,9 @@ void move_tank_shot(WINDOW* win, tank_info_t *tank)
             /* done with shot */
             tank->shot_x = -1;
             tank->shot_y = -1;
+
+            /* stop shot sound */
+            select_sound(tank->sound_data, SOUND_OFF);
         }
     }
     else
@@ -752,6 +740,7 @@ void move_tank_shot(WINDOW* win, tank_info_t *tank)
 void check_tank_shot(WINDOW* win, tank_info_t *tank, ufo_info_t *ufo)
 {
     int dx;
+    sound_error_t sound_error;
 
     if (tank->shot_hit_ufo)
     {
@@ -815,6 +804,16 @@ void check_tank_shot(WINDOW* win, tank_info_t *tank, ufo_info_t *ufo)
     }
 
     wrefresh(win);
+
+    /* start the ufo falling sound */
+    next_ufo_sound(ufo->sound_data);
+    sound_error = restart_sound_stream(ufo->sound_data);
+
+    if (0 != sound_error)
+    {
+        handle_error(sound_error);
+    }
+
     return;
 }
 
@@ -1003,8 +1002,18 @@ void check_ufo_shot(tank_info_t *tank, ufo_info_t *ufo)
 
     if (hit)
     {
-        /* record tank hit and stop ufo shot */
+        /* record tank hit, start fire sound, stop ufo shot */
+        sound_error_t sound_error;
+
         tank->on_fire = 1;
+        select_sound(tank->sound_data, SOUND_ON_FIRE);
+        sound_error = restart_sound_stream(tank->sound_data);
+
+        if (0 != sound_error)
+        {
+            handle_error(sound_error);
+        }
+
         ufo->shot_x = -1;
         ufo->shot_y = -1;
         ufo->shot_direction = DIR_NONE;
