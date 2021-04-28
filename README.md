@@ -53,6 +53,8 @@ until the first tank shot goes off the screen.
 
 The Q key may be used to quit the game.
 
+The + key and - key may be used to increase and decrease the volume
+
 ## History
 12/09/20
 * Initial release
@@ -72,7 +74,10 @@ The Q key may be used to quit the game.
 * New tank shot sound effect
 * Each sound now exits in its own file
 * Tank and UFO data structures now contain pointers to sound data
-** Sounds are updated when the event that triggers then happens
+  * Sounds are updated when the event that triggers then happens
+
+04/27/21
+* Added volume control using the +/- keys
 
 ## TODO
 - Handle overlapping tank and UFO fires
