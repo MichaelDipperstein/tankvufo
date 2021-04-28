@@ -390,6 +390,18 @@ int handle_keypress(WINDOW* win, tank_info_t *tank)
             }
             break;
 
+        case '+':
+        case '=':
+            /* increase the base volume */
+            increment_volume(tank->sound_data);
+            break;
+
+        case '-':
+        case '_':
+            /* decrease the base volume */
+            decrement_volume(tank->sound_data);
+            break;
+
         default:
             break;
     }

@@ -68,4 +68,7 @@ sound_error_t close_sound_stream(sound_data_t *data);
 void select_sound(sound_data_t *data, sound_t sound);
 void next_ufo_sound(sound_data_t *data);
 
+float increment_volume(sound_data_t *data);
+float decrement_volume(sound_data_t *data);
+
 #endif /* ndef  __SOUNDS_H */

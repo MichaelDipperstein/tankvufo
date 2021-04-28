@@ -107,9 +107,9 @@ static int sound_callback(const void *inputBuffer,
         for(i=0; i < framesPerBuffer; i++)
         {
             /* left channel output then right channel output */
-            *out = shot_sound[data->phase];
+            *out = data->volume * shot_sound[data->phase];
             out++;
-            *out = shot_sound[data->phase];
+            *out = data->volume * shot_sound[data->phase];
             out++;
 
             data->phase++;
@@ -130,9 +130,9 @@ static int sound_callback(const void *inputBuffer,
         for(i=0; i < framesPerBuffer; i++)
         {
             /* left channel output then right channel output */
-            *out = on_fire[data->phase];
+            *out = data->volume * on_fire[data->phase];
             out++;
-            *out = on_fire[data->phase];
+            *out = data->volume * on_fire[data->phase];
             out++;
 
             data->phase++;
@@ -261,3 +261,40 @@ void next_ufo_sound(sound_data_t *data)
         select_sound(data, SOUND_LOW_FREQ);
     }
 }
+
+float increment_volume(sound_data_t *data)
+{
+    float new_volume;
+
+    new_volume = data->volume + 0.1;
+
+    if (new_volume > 1.0)
+    {
+        data->volume = 1.0;
+    }
+    else
+    {
+        data->volume = new_volume;
+    }
+
+    return data->volume;
+}
+
+float decrement_volume(sound_data_t *data)
+{
+    float new_volume;
+
+    new_volume = data->volume - 0.1;
+
+    if (new_volume < 0.0)
+    {
+        data->volume = 0.0;
+    }
+    else
+    {
+        data->volume = new_volume;
+    }
+
+    return data->volume;
+}
+
