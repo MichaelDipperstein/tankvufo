@@ -9,7 +9,7 @@ similar is based on my memory and YouTube videos.
 
 The source code in this archive is not derived from the VIC-20 source code.
 The [ncursesw](https://invisible-island.net/ncurses/ "ncursesw") and
-[portaudio](http://www.portaudio.com/ "portaudio") and libraries are required
+[portaudio](http://www.portaudio.com/ "portaudio") are libraries are required
 to build this source.
 
 The source code for the Commodore VIC-20 version of Tank-V-UFO was published in
