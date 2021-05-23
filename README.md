@@ -27,9 +27,13 @@ GNU GPL.
 | sound_data.h | Header including all sound effects |
 | sounds.h   | C header for sound effect functions |
 | sounds.c   | Sound effects implemented using PortAudio |
+| tank.h     | C header for tank and tank shot functions |
+| tank.c     | C source for tank and tank shot functions |
 | tankvufo.c | C source to handle all of the game logic |
 | on_fire.h  | Definition of fire sound effect |
 | tank_shot.h | Definition of tank shot sound effect |
+| ufo.h      | C header for ufo and tank shot functions |
+| ufo.c      | C source for ufo and tank shot functions |
 | ufo_falling.h | Definition of ufo falling sound effect |
 
 ## Building
@@ -79,8 +83,13 @@ The + key and - key may be used to increase and decrease the volume.
 04/27/21
 * Added volume control using the +/- keys
 
+05/23/21
+* Reset sound phase when changing sounds
+* Partition source into smaller files
+
 ## TODO
 - Handle overlapping tank and UFO fires
+- Prevent tanks from firing while UFO is falling or on fire
 
 ## BUGS
 - Sometimes spay from UFO shot hitting the ground doesn't clear

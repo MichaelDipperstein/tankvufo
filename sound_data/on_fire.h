@@ -1,5 +1,5 @@
 /***************************************************************************
-*                             Tank Versuses UFO
+*                              Tank Versus UFO
 *
 *   File    : on_fire.h
 *   Purpose : Sound of tank or UFO on fire for a tribute to the Tank-V-UFO, a
@@ -9,12 +9,12 @@
 *
 ****************************************************************************
 *
-* Tank Versuses UFO: A tribute to the Tank-V-UFO, a Commodore VIC-20 Game
-*                    by Duane Later
+* Tank Versus UFO: A tribute to the Tank-V-UFO, a Commodore VIC-20 Game
+*                  by Duane Later
 *
 * Copyright (C) 2021 by Michael Dipperstein (mdipperstein@gmail.com)
 *
-* This file is part of Tank Versuses UFO.
+* This file is part of Tank Versus UFO.
 *
 * Trim is free software; you can redistribute it and/or modify it under
 * the terms of the GNU General Public License as published by the Free

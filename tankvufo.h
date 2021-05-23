@@ -1,17 +1,17 @@
 /***************************************************************************
 *                              Tank Versus UFO
 *
-*   File    : sounds.h
-*   Purpose : PortAudio based sound library for Tank Versuses UFO
+*   File    : tankvufo.h
+*   Purpose : Common definitions used by Tank Versus UFO
 *   Author  : Michael Dipperstein
-*   Date    : February 7, 2021
+*   Date    : May 21, 2021
 *
 ****************************************************************************
 *
 * Tank Versus UFO: A tribute to the Tank-V-UFO, a Commodore VIC-20 Game
 *                  by Duane Later
 *
-* Copyright (C) 2020, 2021 by
+* Copyright (C) 2021 by
 *       Michael Dipperstein (mdipperstein@gmail.com)
 *
 * This file is part of Tank Versus UFO.
@@ -30,45 +30,43 @@
 * with this program.  If not, see <http://www.gnu.org/licenses/>.
 *
 ****************************************************************************/
-#ifndef  __SOUNDS_H
-#define  __SOUNDS_H
+#ifndef  __TANKVUFO_H
+#define  __TANKVUFO_H
 
-#include <portaudio.h>
-static const int SAMPLE_RATE = 44100;
-
+/* movement directions used by tank, ufo, and ufo shots */
 typedef enum
 {
-    SOUND_OFF,          /* off */
-    SOUND_LOW_FREQ,     /* normal ufo falling frequency */
-    SOUND_HIGH_FREQ,    /* 2x ufo falling frequency */
-    SOUND_TANK_SHOT,    /* tank shot explosion */
-    SOUND_ON_FIRE,      /* tank or ufo on fire */
-} sound_t;
-
+    DIR_NONE,
+    DIR_LEFT,
+    DIR_RIGHT,
+    DIR_FALLING_LEFT,
+    DIR_FALLING_RIGHT,
+    DIR_LANDED
+} direction_t;
 
 typedef struct
 {
-    float volume;
-    int phase;
-    sound_t sound;       /* normal, 2x frequency, tank shot, or off */
-    PaStream *stream;
-} sound_data_t;
+    int8_t x;
+    int8_t y;
+} pos_t;
 
-typedef PaError sound_error_t;
+/* constants defined in tankvufo.c */
 
-void handle_error(sound_error_t error);
+/* screen dimensions */
+extern const int V20_COLS;
+extern const int V20_ROWS;
 
-sound_error_t initialize_sounds(void);
-void end_sounds(void);
+/* score is written to this row */
+extern const int SCORE_ROW;
 
-int create_sound_stream(sound_data_t *data, float volume);
-sound_error_t restart_sound_stream(sound_data_t *data);
-sound_error_t close_sound_stream(sound_data_t *data);
+/* rows containing tank animation */
+extern const int TANK_TREAD_ROW;
+extern const int TANK_TURRET_ROW;
+extern const int TANK_GUN_ROW;
+extern const int TANK_SHOT_START_ROW;
 
-void select_sound(sound_data_t *data, sound_t sound);
-void next_ufo_sound(sound_data_t *data);
+/* lowest and highest rows of ufo travel */
+extern const int UFO_BOTTOM;
+extern const int UFO_TOP;
 
-float increment_volume(sound_data_t *data);
-float decrement_volume(sound_data_t *data);
-
-#endif /* ndef  __SOUNDS_H */
+#endif /* ndef  __TANKVUFO_H */

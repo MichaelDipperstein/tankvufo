@@ -1,20 +1,20 @@
 /***************************************************************************
-*                             Tank Versuses UFO
+*                              Tank Versus UFO
 *
 *   File    : sounds.h
-*   Purpose : PortAudio based sound library for Tank Versuses UFO
+*   Purpose : PortAudio based sound library for Tank Versus UFO
 *   Author  : Michael Dipperstein
 *   Date    : February 7, 2021
 *
 ****************************************************************************
 *
-* Tank Versuses UFO: A tribute to the Tank-V-UFO, a Commodore VIC-20 Game
-*                    by Duane Later
+* Tank Versus UFO: A tribute to the Tank-V-UFO, a Commodore VIC-20 Game
+*                  by Duane Later
 *
 * Copyright (C) 2020, 2021 by
 *       Michael Dipperstein (mdipperstein@gmail.com)
 *
-* This file is part of Tank Versuses UFO.
+* This file is part of Tank Versus UFO.
 *
 * Trim is free software; you can redistribute it and/or modify it under
 * the terms of the GNU General Public License as published by the Free
@@ -224,8 +224,8 @@ sound_error_t restart_sound_stream(sound_data_t *data)
         }
     }
 
-    result = Pa_StartStream(data->stream);
     data->phase = 0;
+    result = Pa_StartStream(data->stream);
 
     return result;
 }
@@ -239,11 +239,17 @@ sound_error_t close_sound_stream(sound_data_t *data)
 
 void select_sound(sound_data_t *data, sound_t sound)
 {
+    if (sound == data->sound)
+    {
+        /* already selected */
+        return;
+    }
+
+    data->phase = 0;
     data->sound = sound;
 
     if (SOUND_OFF == sound)
     {
-        data->phase = 0;
         Pa_AbortStream(data->stream);
     }
 }
