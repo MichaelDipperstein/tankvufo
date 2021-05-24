@@ -36,12 +36,37 @@
 
 #include "ufo.h"
 
+/* struct containing ufo related data */
+struct ufo_info_t
+{
+    int x;                      /* leftmost ufo coordinate */
+    int y;                      /* row containing the ufo */
+    direction_t direction;      /* direction that the UFO is moving */
+    uint8_t ufo_hit_ground;     /* 0 when not on fire, otherwise flame count */
+    int shot_x;                 /* x coordinate of ufo shot */
+    int shot_y;                 /* y coordinate of ufo shot */
+    direction_t shot_direction; /* direction the ufo shot is moving */
+    uint8_t shot_hit_ground;    /* 0 if false, otherwise phase of explosion */
+    uint8_t number_died;        /* number of ufos that died (tank score) */
+    WINDOW *win;                /* ncurses window for the ufo and its shot */
+    sound_data_t *sound_data;
+};
+
+
 /* cchar_t for unicode charaters used in this file */
 static const cchar_t GROUND_CHAR = {WA_NORMAL, L"▔", 0};
 static const cchar_t UFO_SHOT_CHAR = {WA_NORMAL, L"●", 0};
 
-void initialize_ufo(sound_data_t *sound_data, ufo_info_t *ufo)
+ufo_info_t *ufo_initialize(WINDOW *window, sound_data_t *sound_data)
 {
+    ufo_info_t *ufo;
+    ufo = (ufo_info_t *)malloc(sizeof(struct ufo_info_t));
+
+    if (NULL == ufo)
+    {
+        return NULL;    /* allocation failed */
+    }
+
     /* start without a ufo and no shot */
     ufo->x = 0;
     ufo->y = 0;
@@ -51,16 +76,21 @@ void initialize_ufo(sound_data_t *sound_data, ufo_info_t *ufo)
     ufo->shot_y = 0;
     ufo->shot_direction = DIR_NONE;
     ufo->shot_hit_ground = 0;
+    ufo->number_died = 0;
+    ufo->win = window;
     ufo->sound_data = sound_data;
 
     srand((unsigned int)time(NULL));    /* seed the random number generator */
+
+    return ufo;
 }
 
 
-uint8_t move_ufo(WINDOW* win, ufo_info_t *ufo)
+void ufo_move(ufo_info_t *ufo)
 {
-    uint8_t score;
-    score = 0;
+    WINDOW *win;
+
+    win = ufo->win;
 
     switch (ufo->direction)
     {
@@ -87,7 +117,7 @@ uint8_t move_ufo(WINDOW* win, ufo_info_t *ufo)
                 ufo->direction = DIR_LEFT;
             }
 
-            make_ufo_shot(ufo);
+            ufo_shot_decision(ufo);
             mvwaddstr(win, ufo->y, ufo->x, "<*>");
             break;
 
@@ -118,7 +148,7 @@ uint8_t move_ufo(WINDOW* win, ufo_info_t *ufo)
                 ufo->x++;
             }
 
-            make_ufo_shot(ufo);
+            ufo_shot_decision(ufo);
             break;
 
         case DIR_LEFT:
@@ -152,7 +182,7 @@ uint8_t move_ufo(WINDOW* win, ufo_info_t *ufo)
                 mvwaddstr(win, ufo->y, ufo->x, "<*> ");
             }
 
-            make_ufo_shot(ufo);
+            ufo_shot_decision(ufo);
             break;
 
         case DIR_FALLING_RIGHT:
@@ -233,7 +263,7 @@ uint8_t move_ufo(WINDOW* win, ufo_info_t *ufo)
                 /* stop the fire sound */
                 select_sound(ufo->sound_data, SOUND_OFF);
 
-                score = 1;          /* credit tank with kill */
+                ufo->number_died += 1;      /* credit tank with kill */
             }
             else
             {
@@ -258,11 +288,48 @@ uint8_t move_ufo(WINDOW* win, ufo_info_t *ufo)
     }
 
     wrefresh(win);
-    return score;
 }
 
 
-void make_ufo_shot(ufo_info_t *ufo)
+pos_t ufo_get_pos(const ufo_info_t *ufo)
+{
+    pos_t ufo_pos;
+
+    ufo_pos.x = ufo->x;
+    ufo_pos.y = ufo->y;
+
+    return ufo_pos;
+}
+
+
+uint8_t ufo_get_tank_score(const ufo_info_t *ufo)
+{
+    return ufo->number_died;
+}
+
+
+sound_error_t ufo_set_falling(ufo_info_t *ufo)
+{
+    sound_error_t sound_error;
+
+    if (DIR_LEFT == ufo->direction)
+    {
+        ufo->direction = DIR_FALLING_LEFT;
+    }
+    else if (DIR_RIGHT == ufo->direction)
+    {
+        ufo->direction = DIR_FALLING_RIGHT;
+    }
+
+    /* start the ufo falling sound */
+    next_ufo_sound(ufo->sound_data);
+    sound_error = restart_sound_stream(ufo->sound_data);
+
+    return sound_error;
+}
+
+
+void ufo_shot_decision(ufo_info_t *ufo)
 {
     if ((DIR_NONE != ufo->shot_direction) || (ufo->shot_hit_ground))
     {
@@ -296,7 +363,7 @@ void make_ufo_shot(ufo_info_t *ufo)
     /* 1 in 3 chance of non-shooter to shoot */
     if (0 == (rand() % 3))
     {
-        /* prime the position for move_ufo_shot()  */
+        /* prime the position for ufo_move_shot()  */
         if (DIR_RIGHT == ufo->direction)
         {
             /* shot will head right */
@@ -315,9 +382,18 @@ void make_ufo_shot(ufo_info_t *ufo)
 }
 
 
-void move_ufo_shot(WINDOW* win, ufo_info_t *ufo)
+void ufo_move_shot(ufo_info_t *ufo)
 {
     cchar_t c;
+    WINDOW *win;
+
+    if ((DIR_NONE == ufo->shot_direction) || (0 != ufo->shot_hit_ground))
+    {
+        /* there is no shot to move */
+        return;
+    }
+
+    win = ufo->win;
 
     /* erase old shot if it hasn't been overwritten */
     mvwin_wch(win, ufo->shot_y, ufo->shot_x, &c);
@@ -356,9 +432,58 @@ void move_ufo_shot(WINDOW* win, ufo_info_t *ufo)
 }
 
 
-int ufo_shot_hit_ground(WINDOW* win, ufo_info_t *ufo)
+pos_t ufo_get_shot_pos(const ufo_info_t *ufo)
+{
+    pos_t shot_pos;
+
+    shot_pos.x = ufo->shot_x;
+    shot_pos.y = ufo->shot_y;
+
+    return shot_pos;
+}
+
+
+void ufo_clear_shot(ufo_info_t *ufo, bool erase)
+{
+    if (erase && (-1 != ufo->shot_y))
+    {
+        /* erase any existing shot */
+        cchar_t c;
+
+        /* erase old shot if it hasn't been overwritten */
+        mvwin_wch(ufo->win, ufo->shot_y, ufo->shot_x, &c);
+
+        if (UFO_SHOT_CHAR.chars[0] == c.chars[0])
+        {
+            mvwaddch(ufo->win, ufo->shot_y, ufo->shot_x, ' ');
+        }
+    }
+
+    /* clear shot data */
+    ufo->shot_x = -1;
+    ufo->shot_y = -1;
+    ufo->shot_direction = DIR_NONE;
+}
+
+
+bool ufo_shot_is_falling(const ufo_info_t *ufo)
+{
+    return (DIR_NONE != ufo->shot_direction);
+}
+
+
+bool ufo_shot_is_exploding(const ufo_info_t *ufo)
+{
+    return (0 != ufo->shot_hit_ground);
+}
+
+
+int ufo_shot_hit_ground(ufo_info_t *ufo)
 {
     int clean_up = 0;
+    WINDOW *win;
+
+    win = ufo->win;
 
     switch (ufo->shot_hit_ground)
     {

@@ -64,7 +64,6 @@ const int UFO_TOP = SCORE_ROW + 2;
 
 /* cchar_t for unicode charaters used in this file */
 static const cchar_t GROUND_CHAR = {WA_NORMAL, L"▔", 0};
-static const cchar_t UFO_SHOT_CHAR = {WA_NORMAL, L"●", 0};
 static const cchar_t BOX_CHAR = {WA_NORMAL, L"█", 0};
 
 static const float VOLUME = 0.5;        /* base volume for sounds */
@@ -83,9 +82,7 @@ int main(void)
     WINDOW *v20_win;
     int win_x, win_y;
     tank_info_t *tank_info;
-    ufo_info_t ufo_info;
-    uint8_t tank_score;
-    uint8_t ufo_score;
+    ufo_info_t *ufo_info;
 
     /* timer and poll variables */
     int tfd;
@@ -129,10 +126,7 @@ int main(void)
     /* draw the ground */
     mvwhline_set(v20_win, V20_ROWS - 1, 0, &GROUND_CHAR, V20_COLS);
 
-    tank_score = 0;
-    ufo_score = 0;
-
-    print_score(v20_win, tank_score, ufo_score);    /* 0 - 0 score */
+    print_score(v20_win, 0, 0);         /* 0 - 0 score */
     wtimeout(v20_win, 0);               /* make wgetch non-blocking */
 
     /* initialize all of the sound stuff */
@@ -155,7 +149,18 @@ int main(void)
         return sound_error;
     }
 
-    initialize_ufo(&sound_data, &ufo_info);
+    ufo_info = ufo_initialize(v20_win, &sound_data);
+
+    if (NULL == ufo_info)
+    {
+        delwin(v20_win);
+        endwin();
+        close_sound_stream(&sound_data);
+        end_sounds();
+        perror("allocating ufo_info");
+        return 1;
+    }
+
     tank_info = tank_initialize(v20_win, &sound_data);
 
     if (NULL == tank_info)
@@ -164,6 +169,7 @@ int main(void)
         endwin();
         close_sound_stream(&sound_data);
         end_sounds();
+        free(ufo_info);
         perror("allocating tank_info");
         return 1;
     }
@@ -232,33 +238,29 @@ int main(void)
             break;
         }
 
-        ufo_score += tank_move(tank_info);
-        tank_score += move_ufo(v20_win, &ufo_info);
+        tank_move(tank_info);
+        ufo_move(ufo_info);
 
         if (!tank_shot_hit(tank_info))
         {
             tank_shot_move(tank_info);
         }
 
-        if ((DIR_NONE != ufo_info.shot_direction) &&
-            (0 == ufo_info.shot_hit_ground))
-        {
-            /* shot is exists and not exploding */
-            move_ufo_shot(v20_win, &ufo_info);
-        }
+        /* move ufo shot if need (shot exists and isn't exploding */
+        ufo_move_shot(ufo_info);
 
         if (tank_took_shot(tank_info))
         {
             /* check for ufo hit */
-            check_tank_shot(v20_win, tank_info, &ufo_info);
+            check_tank_shot(v20_win, tank_info, ufo_info);
         }
 
-        if (0 != ufo_info.shot_hit_ground)
+        if (ufo_shot_is_exploding(ufo_info))
         {
             int clean_up;
 
-            /* shot is exploding on the ground */
-            clean_up = ufo_shot_hit_ground(v20_win, &ufo_info);
+            /* shot is exploding on the ground, animate it */
+            clean_up = ufo_shot_hit_ground(ufo_info);
 
             if (clean_up)
             {
@@ -267,19 +269,21 @@ int main(void)
                 tank_move(tank_info);
             }
         }
-        else if (DIR_NONE != ufo_info.shot_direction)
+        else if (ufo_shot_is_falling(ufo_info))
         {
             /* check for tank hit */
-            check_ufo_shot(tank_info, &ufo_info);
+            check_ufo_shot(tank_info, ufo_info);
         }
 
-        print_score(v20_win, tank_score, ufo_score);
+        print_score(v20_win, ufo_get_tank_score(ufo_info),
+            tank_get_ufo_score(tank_info));
     }
 
     delwin(v20_win);
     endwin();
     close_sound_stream(&sound_data);
     end_sounds();
+    free(ufo_info);
     free(tank_info);
     return 0;
 }
@@ -368,8 +372,10 @@ void check_tank_shot(WINDOW* win, tank_info_t *tank, ufo_info_t *ufo)
     int dx;
     sound_error_t sound_error;
     pos_t shot_pos;
+    pos_t ufo_pos;
 
     shot_pos = tank_get_shot_pos(tank);
+    ufo_pos = ufo_get_pos(ufo);
 
     if (tank_shot_hit(tank))
     {
@@ -384,13 +390,13 @@ void check_tank_shot(WINDOW* win, tank_info_t *tank, ufo_info_t *ufo)
         return;
     }
 
-    if (shot_pos.y != ufo->y)
+    if (shot_pos.y != ufo_pos.y)
     {
         /* different rows, no hit */
         return;
     }
 
-    dx = shot_pos.x - ufo->x;
+    dx = shot_pos.x - ufo_pos.x;
 
     if ((dx < 0) || (dx > 2))
     {
@@ -407,44 +413,17 @@ void check_tank_shot(WINDOW* win, tank_info_t *tank, ufo_info_t *ufo)
     mvwadd_wch(win, shot_pos.y + 1, shot_pos.x, &BOX_CHAR);
     wattroff(win, COLOR_PAIR(3));
 
-    if (DIR_LEFT == ufo->direction)
-    {
-        ufo->direction = DIR_FALLING_LEFT;
-    }
-    else if (DIR_RIGHT == ufo->direction)
-    {
-        ufo->direction = DIR_FALLING_RIGHT;
-    }
-
-    /* ufo shot magically disappears when UFO is hit */
-    if (ufo->shot_y != -1)
-    {
-        cchar_t c;
-
-        /* erase old shot if it hasn't been overwritten */
-        mvwin_wch(win, ufo->shot_y, ufo->shot_x, &c);
-
-        if (UFO_SHOT_CHAR.chars[0] == c.chars[0])
-        {
-            mvwaddch(win, ufo->shot_y, ufo->shot_x, ' ');
-        }
-
-        ufo->shot_x = -1;
-        ufo->shot_y = -1;
-        ufo->shot_direction = DIR_NONE;
-    }
-
-    wrefresh(win);
-
-    /* start the ufo falling sound */
-    next_ufo_sound(ufo->sound_data);
-    sound_error = restart_sound_stream(ufo->sound_data);
+    sound_error = ufo_set_falling(ufo);
 
     if (0 != sound_error)
     {
         handle_error(sound_error);
     }
 
+    /* ufo shot magically disappears when UFO is hit */
+    ufo_clear_shot(ufo, true);
+
+    wrefresh(win);
     return;
 }
 
@@ -453,18 +432,21 @@ void check_ufo_shot(tank_info_t *tank, ufo_info_t *ufo)
 {
     int dx;
     bool hit;
+    pos_t shot_pos;
 
-    if (ufo->shot_y < TANK_GUN_ROW)
+    shot_pos = ufo_get_shot_pos(ufo);
+
+    if (shot_pos.y < TANK_GUN_ROW)
     {
         /* shot is above the tank */
         return;
     }
 
-    dx = ufo->shot_x - tank_get_pos(tank);
+    dx = shot_pos.x - tank_get_pos(tank);
     hit = false;
 
     /* check for hit by row */
-    if (TANK_GUN_ROW == ufo->shot_y)
+    if (TANK_GUN_ROW == shot_pos.y)
     {
         /* gun barrel row */
         if (3 == dx)
@@ -472,7 +454,7 @@ void check_ufo_shot(tank_info_t *tank, ufo_info_t *ufo)
             hit = true;
         }
     }
-    else if (TANK_TURRET_ROW == ufo->shot_y)
+    else if (TANK_TURRET_ROW == shot_pos.y)
     {
         /* turret row */
         if ((2 == dx) || (3 == dx))
@@ -480,7 +462,7 @@ void check_ufo_shot(tank_info_t *tank, ufo_info_t *ufo)
             hit = true;
         }
     }
-    else if (TANK_TREAD_ROW == ufo->shot_y)
+    else if (TANK_TREAD_ROW == shot_pos.y)
     {
         /* tread row */
         if ((dx > 0) && (dx < 5))
@@ -503,9 +485,7 @@ void check_ufo_shot(tank_info_t *tank, ufo_info_t *ufo)
             handle_error(sound_error);
         }
 
-        ufo->shot_x = -1;
-        ufo->shot_y = -1;
-        ufo->shot_direction = DIR_NONE;
+        ufo_clear_shot(ufo, false);
     }
 }
 

@@ -37,23 +37,26 @@
 #include "sounds.h"
 
 /* struct containing ufo related data */
-typedef struct
-{
-    int x;                      /* leftmost ufo coordinate */
-    int y;                      /* row containing the ufo */
-    direction_t direction;      /* direction that the UFO is moving */
-    uint8_t ufo_hit_ground;     /* 0 when not on fire, otherwise flame count */
-    int shot_x;                 /* x coordinate of ufo shot */
-    int shot_y;                 /* y coordinate of ufo shot */
-    direction_t shot_direction; /* direction the ufo shot is moving */
-    uint8_t shot_hit_ground;    /* 0 if false, otherwise phase of explosion */
-    sound_data_t *sound_data;
-} ufo_info_t;
+typedef struct ufo_info_t ufo_info_t;
 
-void initialize_ufo(sound_data_t *sound_data, ufo_info_t *ufo);
-uint8_t move_ufo(WINDOW* win, ufo_info_t *ufo);
-void make_ufo_shot(ufo_info_t *ufo);
-void move_ufo_shot(WINDOW* win, ufo_info_t *ufo);
-int ufo_shot_hit_ground(WINDOW* win, ufo_info_t *ufo);
+
+ufo_info_t *ufo_initialize(WINDOW *window, sound_data_t *sound_data);
+
+/* ufo shot movement and information */
+void ufo_move(ufo_info_t *ufo);
+pos_t ufo_get_pos(const ufo_info_t *ufo);
+uint8_t ufo_get_tank_score(const ufo_info_t *ufo);
+
+/* start falling direction and sound */
+sound_error_t ufo_set_falling(ufo_info_t *ufo);
+
+/* ufo shot movement and information */
+void ufo_shot_decision(ufo_info_t *ufo);
+void ufo_move_shot(ufo_info_t *ufo);
+pos_t ufo_get_shot_pos(const ufo_info_t *ufo);
+void ufo_clear_shot(ufo_info_t *ufo, bool erase);
+bool ufo_shot_is_falling(const ufo_info_t *ufo);
+bool ufo_shot_is_exploding(const ufo_info_t *ufo);
+int ufo_shot_hit_ground(ufo_info_t *ufo);
 
 #endif /* ndef  __UFO_H */

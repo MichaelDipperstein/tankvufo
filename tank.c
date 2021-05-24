@@ -42,6 +42,7 @@ struct tank_info_t
     pos_t shot_pos;             /* x & y coordinate of tank shot */
     bool shot_hit;              /* true if the ufo was just hit (+ displayed) */
     uint8_t on_fire;            /* 0 when not on fire, otherwise flame count */
+    uint8_t number_died;        /* number of tanks that died (ufo score) */
     WINDOW* win;                /* ncurses window for the tank and its shot */
     sound_data_t *sound_data;
 };
@@ -66,6 +67,7 @@ tank_info_t *tank_initialize(WINDOW *window, sound_data_t *sound_data)
     tank->shot_pos.y = -1;
     tank->shot_hit = false;
     tank->on_fire = 0;
+    tank->number_died = 0;
     tank->win = window;
     tank->sound_data = sound_data;
 
@@ -73,14 +75,9 @@ tank_info_t *tank_initialize(WINDOW *window, sound_data_t *sound_data)
 }
 
 
-/*
- * move the tank or flames of hit tank
- * return 1 when tank flame ends and ufo should get point
- */
-uint8_t tank_move(tank_info_t *tank)
+/* move the tank or flames of hit tank and record death */
+void tank_move(tank_info_t *tank)
 {
-    uint8_t score;
-    score = 0;
     WINDOW *win;
 
     win = tank->win;
@@ -94,7 +91,7 @@ uint8_t tank_move(tank_info_t *tank)
         mvwaddstr(win, TANK_TURRET_ROW, tank->x + 1, "    ");
         mvwaddstr(win, TANK_TREAD_ROW, tank->x, "      ");
         tank->x = 0;
-        score = 1;
+        tank->number_died += 1;
         select_sound(tank->sound_data, SOUND_OFF);
     }
 
@@ -117,7 +114,7 @@ uint8_t tank_move(tank_info_t *tank)
         wattroff(win, COLOR_PAIR(3));
         mvwaddstr(win, TANK_TREAD_ROW, tank->x, "▕OOOO▏");
         wrefresh(win);
-        return score;
+        return;
     }
 
     if (DIR_NONE == tank->direction)
@@ -132,7 +129,7 @@ uint8_t tank_move(tank_info_t *tank)
         if (tank->x == 0)
         {
             /* can't go furter left */
-            return score;
+            return;
         }
 
         /* move to the left, add a trailing space to erase the old */
@@ -146,7 +143,7 @@ uint8_t tank_move(tank_info_t *tank)
         if (tank->x == V20_COLS - 6)
         {
             /* can't go furter right */
-            return score;
+            return;
         }
 
         /* move to the right, add a leading space to erase the old */
@@ -157,7 +154,7 @@ uint8_t tank_move(tank_info_t *tank)
     }
 
     wrefresh(win);
-    return score;
+    return;
 }
 
 
@@ -167,9 +164,15 @@ void tank_set_direction(tank_info_t *tank, const direction_t direction)
 }
 
 
-uint8_t tank_get_pos(tank_info_t *tank)
+uint8_t tank_get_pos(const tank_info_t *tank)
 {
     return tank->x;
+}
+
+
+uint8_t tank_get_ufo_score(const tank_info_t *tank)
+{
+    return tank->number_died;
 }
 
 

@@ -42,9 +42,10 @@ typedef struct tank_info_t tank_info_t;
 tank_info_t *tank_initialize(WINDOW *window, sound_data_t *sound_data);
 
 /* movement and position */
-uint8_t tank_move(tank_info_t *tank);
+void tank_move(tank_info_t *tank);
 void tank_set_direction(tank_info_t *tank, const direction_t direction);
-uint8_t tank_get_pos(tank_info_t *tank);
+uint8_t tank_get_pos(const tank_info_t *tank);
+uint8_t tank_get_ufo_score(const tank_info_t *tank);
 
 /* tank shot movement and position */
 void tank_shot_move(tank_info_t *tank);
