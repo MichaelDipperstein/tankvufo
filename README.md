@@ -22,6 +22,7 @@ GNU GPL.
 
 | File Name  | Contents |
 | ---        | ---      |
+| explode.h  | Definition of tank shot explosion sound |
 | Makefile   | GNU Makefile for this project (assumes gcc compiler and pkg-config) |
 | README.MD  | This file |
 | sound_data.h | Header including all sound effects |
@@ -87,9 +88,15 @@ The + key and - key may be used to increase and decrease the volume.
 * Reset sound phase when changing sounds
 * Partition source into smaller files
 
+06/20/21
+* Added a list of extra commands to the left of the game field
+* Added a volume indicator to the right of the game field
+* Added sound for when UFO is hit be a shot
+
 ## TODO
 - Handle overlapping tank and UFO fires
 - Prevent tanks from firing while UFO is falling or on fire
+- Prevent superseded sound from canceling current sound
 
 ## BUGS
 - Sometimes spay from UFO shot hitting the ground doesn't clear

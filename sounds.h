@@ -41,8 +41,9 @@ typedef enum
     SOUND_OFF,          /* off */
     SOUND_LOW_FREQ,     /* normal ufo falling frequency */
     SOUND_HIGH_FREQ,    /* 2x ufo falling frequency */
-    SOUND_TANK_SHOT,    /* tank shot explosion */
+    SOUND_TANK_SHOT,    /* tank shot flying */
     SOUND_ON_FIRE,      /* tank or ufo on fire */
+    SOUND_EXPLODE       /* tank shot exploding when it hits ufo */
 } sound_t;
 
 

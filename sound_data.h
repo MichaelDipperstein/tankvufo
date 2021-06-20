@@ -38,5 +38,6 @@
 #include "sound_data/ufo_falling.h"
 #include "sound_data/tank_shot.h"
 #include "sound_data/on_fire.h"
+#include "sound_data/explode.h"
 
 #endif /* ndef  __SOUND_DATA_H */

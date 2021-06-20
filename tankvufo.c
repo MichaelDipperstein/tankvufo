@@ -45,7 +45,7 @@
 #include "ufo.h"
 #include "sounds.h"
 
-/* screen dimensions */
+/* vic-20 screen dimensions */
 const int V20_COLS = 22;
 const int V20_ROWS = 23;
 
@@ -62,13 +62,17 @@ const int TANK_SHOT_START_ROW = TANK_GUN_ROW - 1;
 const int UFO_BOTTOM = TANK_SHOT_START_ROW - 2;
 const int UFO_TOP = SCORE_ROW + 2;
 
+/* volume control window dimensions and positions */
+static const int VOL_COLS = 10;
+static const int VOL_ROWS = 13;
+
 /* cchar_t for unicode charaters used in this file */
 static const cchar_t GROUND_CHAR = {WA_NORMAL, L"▔", 0};
 static const cchar_t BOX_CHAR = {WA_NORMAL, L"█", 0};
 
 static const float VOLUME = 0.5;        /* base volume for sounds */
 
-int handle_keypress(WINDOW* win, tank_info_t *tank);
+int handle_keypress(WINDOW* win, WINDOW* vwin, tank_info_t *tank);
 
 void check_tank_shot(WINDOW* win, tank_info_t *tank, ufo_info_t *ufo);
 
@@ -77,9 +81,11 @@ void check_ufo_shot(tank_info_t *tank, ufo_info_t *ufo);
 void print_score(WINDOW* win, const uint8_t tank_score,
     const uint8_t ufo_score);
 
+void show_volume_level(WINDOW *win, const float volume);
+
 int main(void)
 {
-    WINDOW *v20_win;
+    WINDOW *v20_win, *vol_win;
     int win_x, win_y;
     tank_info_t *tank_info;
     ufo_info_t *ufo_info;
@@ -105,11 +111,40 @@ int main(void)
     init_pair(1, COLOR_BLACK, COLOR_CYAN);
     bkgd(COLOR_PAIR(1));
 
+    /* vic-20 sized window for the game field */
     win_x = (COLS - V20_COLS) / 2;
-    win_y =  (LINES - V20_ROWS) / 2;
+    win_y = (LINES - V20_ROWS) / 2;
     v20_win = newwin(V20_ROWS, V20_COLS, win_y, win_x);
 
-    refresh();          /* refresh the whole screen to show the window */
+    if (NULL == v20_win)
+    {
+        endwin();
+        perror("creating VIC-20 window");
+        return 1;
+    }
+
+    /* window for volume meter */
+    win_y = (LINES - VOL_ROWS) / 2;
+    win_x += V20_COLS + VOL_COLS;
+    vol_win = newwin(VOL_ROWS, VOL_COLS, win_y, win_x);
+
+    if (NULL == v20_win)
+    {
+        delwin(v20_win);
+        endwin();
+        perror("creating volume control window");
+        return 1;
+    }
+
+    /* list of commands not in the original game */
+    attron(A_UNDERLINE);
+    mvprintw(2, 5, "EXTRA COMMANDS");
+    attroff(A_UNDERLINE);
+    mvprintw(3, 2, "Q        - QUIT GAME");
+    mvprintw(4, 2, "PLUS(+)  - VOLUME UP");
+    mvprintw(5, 2, "MINUS(-) - VOLUME DOWN");
+
+    refresh();          /* refresh the whole screen to show the windows */
 
     /* now set the window color scheme */
     init_pair(2, COLOR_BLACK, COLOR_WHITE);
@@ -135,6 +170,7 @@ int main(void)
     if (0 != sound_error)
     {
         delwin(v20_win);
+        delwin(vol_win);
         endwin();
         handle_error(sound_error);
         return sound_error;
@@ -144,16 +180,26 @@ int main(void)
     if (0 != sound_error)
     {
         delwin(v20_win);
+        delwin(vol_win);
         endwin();
         handle_error(sound_error);
         return sound_error;
     }
+
+    /* now draw the volume level box */
+    wbkgd(vol_win, COLOR_PAIR(2));
+    box(vol_win, 0, 0);
+    mvwaddch(vol_win, 1, 1, '+');
+    mvwaddch(vol_win, VOL_ROWS - 3, 1, '-');
+    mvwaddstr(vol_win, VOL_ROWS - 2, 1, " VOLUME ");
+    show_volume_level(vol_win, VOLUME);
 
     ufo_info = ufo_initialize(v20_win, &sound_data);
 
     if (NULL == ufo_info)
     {
         delwin(v20_win);
+        delwin(vol_win);
         endwin();
         close_sound_stream(&sound_data);
         end_sounds();
@@ -166,6 +212,7 @@ int main(void)
     if (NULL == tank_info)
     {
         delwin(v20_win);
+        delwin(vol_win);
         endwin();
         close_sound_stream(&sound_data);
         end_sounds();
@@ -183,6 +230,7 @@ int main(void)
     if (tfd <= 0)
     {
         delwin(v20_win);
+        delwin(vol_win);
         endwin();
         close_sound_stream(&sound_data);
         end_sounds();
@@ -200,6 +248,7 @@ int main(void)
     if (timerfd_settime(tfd, 0, &timeout, 0) != 0)
     {
         delwin(v20_win);
+        delwin(vol_win);
         endwin();
         perror("setting timerfd");
         return 1;
@@ -232,7 +281,7 @@ int main(void)
             break;
         }
 
-        if (handle_keypress(v20_win, tank_info) < 0)
+        if (handle_keypress(v20_win, vol_win, tank_info) < 0)
         {
             /* we got a quit key */
             break;
@@ -280,6 +329,7 @@ int main(void)
     }
 
     delwin(v20_win);
+    delwin(vol_win);
     endwin();
     close_sound_stream(&sound_data);
     end_sounds();
@@ -289,9 +339,10 @@ int main(void)
 }
 
 
-int handle_keypress(WINDOW* win, tank_info_t *tank)
+int handle_keypress(WINDOW* win, WINDOW* vwin, tank_info_t *tank)
 {
     int ch;
+    float vol;
 
     /* now read a character from the keyboard */
     ch = wgetch(win);
@@ -350,13 +401,15 @@ int handle_keypress(WINDOW* win, tank_info_t *tank)
         case '+':
         case '=':
             /* increase the base volume */
-            increment_volume(tank_sound_data(tank));
+            vol = increment_volume(tank_sound_data(tank));
+            show_volume_level(vwin, vol);
             break;
 
         case '-':
         case '_':
             /* decrease the base volume */
-            decrement_volume(tank_sound_data(tank));
+            vol = decrement_volume(tank_sound_data(tank));
+            show_volume_level(vwin, vol);
             break;
 
         default:
@@ -495,5 +548,26 @@ void print_score(WINDOW* win, const uint8_t tank_score,
 {
     mvwprintw(win, SCORE_ROW, 5, "%d", ufo_score);
     mvwprintw(win, SCORE_ROW, 15, "%d", tank_score);
+    wrefresh(win);
+}
+
+
+void show_volume_level(WINDOW *win, const float volume)
+{
+    int bars;
+    int start_y;
+
+    bars = (int)(volume * 10.0 + 0.5);
+    start_y = (VOL_ROWS - 2) - bars;
+
+    /* erase old bar */
+    mvwvline(win, VOL_ROWS - 2 - 10, 4, ' ', 10);
+    mvwvline(win, VOL_ROWS - 2 - 10, 5, ' ', 10);
+
+    /* draw new bar in color pair 3 color (same as fire) */
+    wattron(win, COLOR_PAIR(3));
+    mvwvline_set(win, start_y, 4, &BOX_CHAR, bars);
+    mvwvline_set(win, start_y, 5, &BOX_CHAR, bars);
+    wattron(win, COLOR_PAIR(3));
     wrefresh(win);
 }

@@ -7,7 +7,7 @@ CFLAGS = -Wall -Wextra `pkg-config ncursesw portaudio-2.0 --cflags`
 LDFLAGS = `pkg-config ncursesw portaudio-2.0 --libs`
 
 SD_FILES = sound_data.h sound_data/on_fire.h sound_data/tank_shot.h \
-	sound_data/ufo_falling.h
+	sound_data/ufo_falling.h sound_data/explode.h
 
 all:	tankvufo
 
