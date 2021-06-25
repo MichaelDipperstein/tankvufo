@@ -138,7 +138,7 @@ int main(void)
 
     /* list of commands not in the original game */
     attron(A_UNDERLINE);
-    mvprintw(2, 5, "EXTRA COMMANDS");
+    mvprintw(2, 5, "ADDED COMMANDS");
     attroff(A_UNDERLINE);
     mvprintw(3, 2, "Q        - QUIT GAME");
     mvprintw(4, 2, "PLUS(+)  - VOLUME UP");
