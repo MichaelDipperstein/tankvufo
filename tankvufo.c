@@ -344,76 +344,79 @@ int handle_keypress(WINDOW* win, WINDOW* vwin, tank_info_t *tank)
     int ch;
     float vol;
 
-    /* now read a character from the keyboard */
-    ch = wgetch(win);
-    flushinp();         /* flush the input buffer */
-
+    nodelay(win, TRUE);     /* make sure we're in no delay mode */
     tank_set_direction(tank, DIR_NONE);
+    ch = 0;
 
-    switch(ch)
+    while (ERR != ch)
     {
-        case ERR:   /* no key pressed */
-            break;
+        /* read the next character from the keyboard buffer */
+        ch = wgetch(win);
 
-        case 'Q':
-        case 'q':
-            return -1;
-            break;
+        switch(ch)
+        {
+            case ERR:   /* no more keys */
+                break;
 
-        case 'Z':
-        case 'z':
-            if (!tank_is_on_fire(tank))
-            {
-                tank_set_direction(tank, DIR_LEFT);
-            }
-            break;
+            case 'Q':
+            case 'q':
+                return -1;
 
-        case 'C':
-        case 'c':
-            if (!tank_is_on_fire(tank))
-            {
-                tank_set_direction(tank, DIR_RIGHT);
-            }
-            break;
-
-        case 'B':
-        case 'b':
-            /* shoot */
-            if (!tank_took_shot(tank) && !tank_is_on_fire(tank))
-            {
-                sound_error_t sound_error;
-
-                /* there isn't a shot, so take it */
-                tank_set_shot_pos(tank, tank_get_pos(tank) + 3,
-                    TANK_SHOT_START_ROW);
-
-                /* play sound */
-                select_sound(tank_sound_data(tank), SOUND_TANK_SHOT);
-                sound_error = restart_sound_stream(tank_sound_data(tank));
-
-                if (0 != sound_error)
+            case 'Z':
+            case 'z':
+                if (!tank_is_on_fire(tank))
                 {
-                    handle_error(sound_error);
+                    tank_set_direction(tank, DIR_LEFT);
                 }
-            }
-            break;
+                break;
 
-        case '+':
-        case '=':
-            /* increase the base volume */
-            vol = increment_volume(tank_sound_data(tank));
-            show_volume_level(vwin, vol);
-            break;
+            case 'C':
+            case 'c':
+                if (!tank_is_on_fire(tank))
+                {
+                    tank_set_direction(tank, DIR_RIGHT);
+                }
+                break;
 
-        case '-':
-        case '_':
-            /* decrease the base volume */
-            vol = decrement_volume(tank_sound_data(tank));
-            show_volume_level(vwin, vol);
-            break;
+            case 'B':
+            case 'b':
+                /* shoot */
+                if (!tank_took_shot(tank) && !tank_is_on_fire(tank))
+                {
+                    sound_error_t sound_error;
 
-        default:
-            break;
+                    /* there isn't a shot, so take it */
+                    tank_set_shot_pos(tank, tank_get_pos(tank) + 3,
+                        TANK_SHOT_START_ROW);
+
+                    /* play sound */
+                    select_sound(tank_sound_data(tank), SOUND_TANK_SHOT);
+                    sound_error = restart_sound_stream(tank_sound_data(tank));
+
+                    if (0 != sound_error)
+                    {
+                        handle_error(sound_error);
+                    }
+                }
+                break;
+
+            case '+':
+            case '=':
+                /* increase the base volume */
+                vol = increment_volume(tank_sound_data(tank));
+                show_volume_level(vwin, vol);
+                break;
+
+            case '-':
+            case '_':
+                /* decrease the base volume */
+                vol = decrement_volume(tank_sound_data(tank));
+                show_volume_level(vwin, vol);
+                break;
+
+            default:
+                break;
+        }
     }
 
     return 0;

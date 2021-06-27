@@ -93,6 +93,9 @@ The + key and - key may be used to increase and decrease the volume.
 * Added a volume indicator to the right of the game field
 * Added sound for when UFO is hit be a shot
 
+06/26/21
+* Process entire key buffer in main loop instead of flushing after first key
+
 ## TODO
 - Handle overlapping tank and UFO fires
 - Prevent tanks from firing while UFO is falling or on fire
