@@ -1,8 +1,9 @@
 ############################################################################
 # Makefile for Tank versus UFO
 ############################################################################
-CC = gcc -g
-LD = gcc -g
+CPP = g++ -g3
+LD = g++ -g3
+
 CFLAGS = -Wall -Wextra `pkg-config ncursesw portaudio-2.0 --cflags`
 LDFLAGS = `pkg-config ncursesw portaudio-2.0 --libs`
 
@@ -14,18 +15,18 @@ all:	tankvufo
 tankvufo:	tankvufo.o tank.o ufo.o sounds.o
 		$(LD) $^ $(LDFLAGS) -o $@
 
-tankvufo.o:	tankvufo.c sounds.h tankvufo.h tank.h ufo.h
-		$(CC) $(CFLAGS) -c $< -o $@
+tankvufo.o:	tankvufo.cpp sounds.h tankvufo.h tank.h ufo.h
+		$(CPP) $(CFLAGS) -c $< -o $@
 
 tank.o:	tank.c tank.h sounds.h tankvufo.h
-		$(CC) $(CFLAGS) -c $< -o $@
+		$(CPP) $(CFLAGS) -c $< -o $@
 
 ufo.o:	ufo.c ufo.h sounds.h tankvufo.h
-		$(CC) $(CFLAGS) -c $< -o $@
+		$(CPP) $(CFLAGS) -c $< -o $@
 
 sounds.o:	sounds.c sounds.h $(SD_FILES)
-		$(CC) -c $< -Wall -Wextra `pkg-config portaudio-2.0 --cflags` -o $@
+		$(CPP) -c $< -Wall -Wextra `pkg-config portaudio-2.0 --cflags` -o $@
 
 clean:
-		rm tankvufo.o tank.o ufo.o sounds.o
-		rm tankvufo
+		rm -f tankvufo.o tank.o ufo.o sounds.o
+		rm -f tankvufo

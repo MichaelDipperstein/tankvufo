@@ -1,7 +1,7 @@
 /***************************************************************************
 *                              Tank Versus UFO
 *
-*   File    : tankvufo.c
+*   File    : tankvufo.cpp
 *   Purpose : A tribute to the Tank-V-UFO, a Commodore VIC-20 Game
 *             by Duane Later
 *   Author  : Michael Dipperstein
@@ -31,14 +31,14 @@
 * with this program.  If not, see <http://www.gnu.org/licenses/>.
 *
 ****************************************************************************/
-#include <locale.h>
+#include <clocale>
 #include <ncurses.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
 #include <sys/timerfd.h>
 #include <sys/poll.h>
 #include <unistd.h>
-#include <errno.h>
+#include <cerrno>
 
 #include "tankvufo.h"
 #include "tank.h"
