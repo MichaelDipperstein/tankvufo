@@ -83,15 +83,16 @@ class tank_v_ufo_c
         tank_info_t *tank;
         ufo_info_t *ufo;
 
-        int handle_keypress();
-        void check_tank_shot();
-        void check_ufo_shot();
-        void print_score(const uint8_t tank_score, const uint8_t ufo_score);
+        int handle_keypress(void);
+        void check_tank_shot(void);
+        void check_ufo_shot(void);
+        void print_score(void);
 
         /* volume window methods */
         void make_vol_win(int rows, int cols, int begin_x, int begin_y);
         void draw_volume_level_box(void);
         void show_volume_level(const float volume);
+
     private:
         WINDOW *vol_win;
         int vol_rows;

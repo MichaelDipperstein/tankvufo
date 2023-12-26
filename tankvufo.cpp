@@ -129,8 +129,7 @@ int main(void)
     /* draw the ground */
     mvwhline_set(tvu->v20_win, V20_ROWS - 1, 0, &GROUND_CHAR, V20_COLS);
 
-    tvu->print_score(0, 0);              /* 0 - 0 score */
-    wtimeout(tvu->v20_win, 0);           /* make wgetch non-blocking */
+    wtimeout(tvu->v20_win, 0);          /* make wgetch non-blocking */
 
     /* initialize all of the sound stuff */
     sound_error = initialize_sounds();
@@ -177,6 +176,7 @@ int main(void)
     }
 
     tank_move(tvu->tank);                   /* draw tank */
+    tvu->print_score();                     /* 0 - 0 score */
     wrefresh(tvu->v20_win);
 
     /* create a timer fd that expires every 200ms */
@@ -277,8 +277,7 @@ int main(void)
             tvu->check_ufo_shot();
         }
 
-        tvu->print_score(ufo_get_tank_score(tvu->ufo),
-            tank_get_ufo_score(tvu->tank));
+        tvu->print_score();
     }
 
     close_sound_stream(&sound_data);
@@ -533,12 +532,10 @@ void tank_v_ufo_c::check_ufo_shot()
     }
 }
 
-
-void tank_v_ufo_c::print_score(const uint8_t tank_score,
-    const uint8_t ufo_score)
+void tank_v_ufo_c::print_score()
 {
-    mvwprintw(v20_win, SCORE_ROW, 5, "%d", ufo_score);
-    mvwprintw(v20_win, SCORE_ROW, 15, "%d", tank_score);
+    mvwprintw(v20_win, SCORE_ROW, 5, "%d", ufo_get_tank_score(ufo));
+    mvwprintw(v20_win, SCORE_ROW, 15, "%d", tank_get_ufo_score(tank));
     wrefresh(v20_win);
 }
 
