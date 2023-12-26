@@ -76,8 +76,10 @@ extern const int UFO_TOP;
 class tank_v_ufo_c
 {
     public:
-        WINDOW *v20_win, *vol_win;
-        int win_x, win_y;
+        tank_v_ufo_c(void);
+        ~tank_v_ufo_c(void);
+
+        WINDOW *v20_win;
         tank_info_t *tank;
         ufo_info_t *ufo;
 
@@ -85,7 +87,16 @@ class tank_v_ufo_c
         void check_tank_shot();
         void check_ufo_shot();
         void print_score(const uint8_t tank_score, const uint8_t ufo_score);
+
+        /* volume window methods */
+        void make_vol_win(int rows, int cols, int begin_x, int begin_y);
+        void draw_volume_level_box(void);
         void show_volume_level(const float volume);
+    private:
+        WINDOW *vol_win;
+        int vol_rows;
+        int vol_cols;
+
 };
 
 #endif /* ndef  __TANKVUFO_H */
