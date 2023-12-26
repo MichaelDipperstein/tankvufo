@@ -33,6 +33,11 @@
 #ifndef  __UFO_H
 #define  __UFO_H
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #include "tankvufo.h"
 #include "sounds.h"
 
@@ -58,5 +63,9 @@ void ufo_clear_shot(ufo_info_t *ufo, bool erase);
 bool ufo_shot_is_falling(const ufo_info_t *ufo);
 bool ufo_shot_is_exploding(const ufo_info_t *ufo);
 int ufo_shot_hit_ground(ufo_info_t *ufo);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* ndef  __UFO_H */

@@ -33,6 +33,10 @@
 #ifndef  __TANKVUFO_H
 #define  __TANKVUFO_H
 
+/* forward declarations */
+typedef struct tank_info_t tank_info_t;
+typedef struct ufo_info_t ufo_info_t;
+
 /* movement directions used by tank, ufo, and ufo shots */
 typedef enum
 {
@@ -68,5 +72,20 @@ extern const int TANK_SHOT_START_ROW;
 /* lowest and highest rows of ufo travel */
 extern const int UFO_BOTTOM;
 extern const int UFO_TOP;
+
+class tank_v_ufo_c
+{
+    public:
+        WINDOW *v20_win, *vol_win;
+        int win_x, win_y;
+        tank_info_t *tank;
+        ufo_info_t *ufo;
+
+        int handle_keypress();
+        void check_tank_shot();
+        void check_ufo_shot();
+        void print_score(const uint8_t tank_score, const uint8_t ufo_score);
+        void show_volume_level(const float volume);
+};
 
 #endif /* ndef  __TANKVUFO_H */

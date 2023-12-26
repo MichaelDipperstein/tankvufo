@@ -41,55 +41,42 @@
 #include <cerrno>
 
 #include "tankvufo.h"
+
 #include "tank.h"
 #include "ufo.h"
 #include "sounds.h"
 
 /* vic-20 screen dimensions */
-const int V20_COLS = 22;
-const int V20_ROWS = 23;
+constexpr int V20_COLS = 22;
+constexpr int V20_ROWS = 23;
 
 /* score is written to this row */
-const int SCORE_ROW = 2;
+constexpr int SCORE_ROW = 2;
 
 /* rows containing tank animation */
-const int TANK_TREAD_ROW = V20_ROWS - 2;
-const int TANK_TURRET_ROW = TANK_TREAD_ROW - 1;
-const int TANK_GUN_ROW = TANK_TURRET_ROW - 1;
-const int TANK_SHOT_START_ROW = TANK_GUN_ROW - 1;
+constexpr int TANK_TREAD_ROW = V20_ROWS - 2;
+constexpr int TANK_TURRET_ROW = TANK_TREAD_ROW - 1;
+constexpr int TANK_GUN_ROW = TANK_TURRET_ROW - 1;
+constexpr int TANK_SHOT_START_ROW = TANK_GUN_ROW - 1;
 
 /* lowest and highest rows of ufo travel */
-const int UFO_BOTTOM = TANK_SHOT_START_ROW - 2;
-const int UFO_TOP = SCORE_ROW + 2;
+constexpr int UFO_BOTTOM = TANK_SHOT_START_ROW - 2;
+constexpr int UFO_TOP = SCORE_ROW + 2;
 
 /* volume control window dimensions and positions */
-static const int VOL_COLS = 10;
-static const int VOL_ROWS = 13;
+static constexpr int VOL_COLS = 10;
+static constexpr int VOL_ROWS = 13;
 
 /* cchar_t for unicode charaters used in this file */
-static const cchar_t GROUND_CHAR = {WA_NORMAL, L"▔", 0};
-static const cchar_t BOX_CHAR = {WA_NORMAL, L"█", 0};
+static constexpr cchar_t GROUND_CHAR = {WA_NORMAL, L"▔", 0};
+static constexpr cchar_t BOX_CHAR = {WA_NORMAL, L"█", 0};
 
-static const float VOLUME = 0.5;        /* base volume for sounds */
+static constexpr float VOLUME = 0.5;    /* base volume for sounds */
 
-int handle_keypress(WINDOW* win, WINDOW* vwin, tank_info_t *tank);
-
-void check_tank_shot(WINDOW* win, tank_info_t *tank, ufo_info_t *ufo);
-
-void check_ufo_shot(tank_info_t *tank, ufo_info_t *ufo);
-
-void print_score(WINDOW* win, const uint8_t tank_score,
-    const uint8_t ufo_score);
-
-void show_volume_level(WINDOW *win, const float volume);
+static tank_v_ufo_c tvu;
 
 int main(void)
 {
-    WINDOW *v20_win, *vol_win;
-    int win_x, win_y;
-    tank_info_t *tank_info;
-    ufo_info_t *ufo_info;
-
     /* timer and poll variables */
     int tfd;
     struct itimerspec timeout;
@@ -112,11 +99,11 @@ int main(void)
     bkgd(COLOR_PAIR(1));
 
     /* vic-20 sized window for the game field */
-    win_x = (COLS - V20_COLS) / 2;
-    win_y = (LINES - V20_ROWS) / 2;
-    v20_win = newwin(V20_ROWS, V20_COLS, win_y, win_x);
+    tvu.win_x = (COLS - V20_COLS) / 2;
+    tvu.win_y = (LINES - V20_ROWS) / 2;
+    tvu.v20_win = newwin(V20_ROWS, V20_COLS, tvu.win_y, tvu.win_x);
 
-    if (NULL == v20_win)
+    if (NULL == tvu.v20_win)
     {
         endwin();
         perror("creating VIC-20 window");
@@ -124,13 +111,13 @@ int main(void)
     }
 
     /* window for volume meter */
-    win_y = (LINES - VOL_ROWS) / 2;
-    win_x += V20_COLS + VOL_COLS;
-    vol_win = newwin(VOL_ROWS, VOL_COLS, win_y, win_x);
+    tvu.win_y = (LINES - VOL_ROWS) / 2;
+    tvu.win_x += V20_COLS + VOL_COLS;
+    tvu.vol_win = newwin(VOL_ROWS, VOL_COLS, tvu.win_y, tvu.win_x);
 
-    if (NULL == v20_win)
+    if (NULL == tvu.v20_win)
     {
-        delwin(v20_win);
+        delwin(tvu.v20_win);
         endwin();
         perror("creating volume control window");
         return 1;
@@ -148,29 +135,29 @@ int main(void)
 
     /* now set the window color scheme */
     init_pair(2, COLOR_BLACK, COLOR_WHITE);
-    wbkgd(v20_win, COLOR_PAIR(2));
+    wbkgd(tvu.v20_win, COLOR_PAIR(2));
 
     /* pair 3 will be for fire */
     init_pair(3, COLOR_RED, COLOR_WHITE);
 
     /* print the banner */
-    wprintw(v20_win, "** TANK VERSUS UFO. **");
-    wprintw(v20_win, "Z-LEFT,C-RIGHT,B-FIRE ");
-    wprintw(v20_win, "UFO:     TANK:");
+    wprintw(tvu.v20_win, "** TANK VERSUS UFO. **");
+    wprintw(tvu.v20_win, "Z-LEFT,C-RIGHT,B-FIRE ");
+    wprintw(tvu.v20_win, "UFO:     TANK:");
 
     /* draw the ground */
-    mvwhline_set(v20_win, V20_ROWS - 1, 0, &GROUND_CHAR, V20_COLS);
+    mvwhline_set(tvu.v20_win, V20_ROWS - 1, 0, &GROUND_CHAR, V20_COLS);
 
-    print_score(v20_win, 0, 0);         /* 0 - 0 score */
-    wtimeout(v20_win, 0);               /* make wgetch non-blocking */
+    tvu.print_score(0, 0);              /* 0 - 0 score */
+    wtimeout(tvu.v20_win, 0);           /* make wgetch non-blocking */
 
     /* initialize all of the sound stuff */
     sound_error = initialize_sounds();
 
     if (0 != sound_error)
     {
-        delwin(v20_win);
-        delwin(vol_win);
+        delwin(tvu.v20_win);
+        delwin(tvu.vol_win);
         endwin();
         handle_error(sound_error);
         return sound_error;
@@ -179,27 +166,27 @@ int main(void)
     sound_error = create_sound_stream(&sound_data, VOLUME);
     if (0 != sound_error)
     {
-        delwin(v20_win);
-        delwin(vol_win);
+        delwin(tvu.v20_win);
+        delwin(tvu.vol_win);
         endwin();
         handle_error(sound_error);
         return sound_error;
     }
 
     /* now draw the volume level box */
-    wbkgd(vol_win, COLOR_PAIR(2));
-    box(vol_win, 0, 0);
-    mvwaddch(vol_win, 1, 1, '+');
-    mvwaddch(vol_win, VOL_ROWS - 3, 1, '-');
-    mvwaddstr(vol_win, VOL_ROWS - 2, 1, " VOLUME ");
-    show_volume_level(vol_win, VOLUME);
+    wbkgd(tvu.vol_win, COLOR_PAIR(2));
+    box(tvu.vol_win, 0, 0);
+    mvwaddch(tvu.vol_win, 1, 1, '+');
+    mvwaddch(tvu.vol_win, VOL_ROWS - 3, 1, '-');
+    mvwaddstr(tvu.vol_win, VOL_ROWS - 2, 1, " VOLUME ");
+    tvu.show_volume_level(VOLUME);
 
-    ufo_info = ufo_initialize(v20_win, &sound_data);
+    tvu.ufo = ufo_initialize(tvu.v20_win, &sound_data);
 
-    if (NULL == ufo_info)
+    if (NULL == tvu.ufo)
     {
-        delwin(v20_win);
-        delwin(vol_win);
+        delwin(tvu.v20_win);
+        delwin(tvu.vol_win);
         endwin();
         close_sound_stream(&sound_data);
         end_sounds();
@@ -207,34 +194,34 @@ int main(void)
         return 1;
     }
 
-    tank_info = tank_initialize(v20_win, &sound_data);
+    tvu.tank = tank_initialize(tvu.v20_win, &sound_data);
 
-    if (NULL == tank_info)
+    if (NULL == tvu.tank)
     {
-        delwin(v20_win);
-        delwin(vol_win);
+        delwin(tvu.v20_win);
+        delwin(tvu.vol_win);
         endwin();
         close_sound_stream(&sound_data);
         end_sounds();
-        free(ufo_info);
+        free(tvu.ufo);
         perror("allocating tank_info");
         return 1;
     }
 
-    tank_move(tank_info);                   /* draw tank */
-    wrefresh(v20_win);
+    tank_move(tvu.tank);               /* draw tank */
+    wrefresh(tvu.v20_win);
 
     /* create a timer fd that expires every 200ms */
     tfd = timerfd_create(CLOCK_MONOTONIC,0);
 
     if (tfd <= 0)
     {
-        delwin(v20_win);
-        delwin(vol_win);
+        delwin(tvu.v20_win);
+        delwin(tvu.vol_win);
         endwin();
         close_sound_stream(&sound_data);
         end_sounds();
-        free(tank_info);
+        free(tvu.tank);
         perror("creating timerfd");
         return 1;
     }
@@ -247,8 +234,8 @@ int main(void)
 
     if (timerfd_settime(tfd, 0, &timeout, 0) != 0)
     {
-        delwin(v20_win);
-        delwin(vol_win);
+        delwin(tvu.v20_win);
+        delwin(tvu.vol_win);
         endwin();
         perror("setting timerfd");
         return 1;
@@ -281,77 +268,78 @@ int main(void)
             break;
         }
 
-        if (handle_keypress(v20_win, vol_win, tank_info) < 0)
+        if (tvu.handle_keypress() < 0)
         {
             /* we got a quit key */
             break;
         }
 
-        tank_move(tank_info);
-        ufo_move(ufo_info);
+        tank_move(tvu.tank);
+        ufo_move(tvu.ufo);
 
-        if (!tank_shot_hit(tank_info))
+        if (!tank_shot_hit(tvu.tank))
         {
-            tank_shot_move(tank_info);
+            tank_shot_move(tvu.tank);
         }
 
-        /* move ufo shot if need (shot exists and isn't exploding */
-        ufo_move_shot(ufo_info);
+        /* move ufo shot if need (shot exists and isn't exploding) */
+        ufo_move_shot(tvu.ufo);
 
-        if (tank_took_shot(tank_info))
+        if (tank_took_shot(tvu.tank))
         {
             /* check for ufo hit */
-            check_tank_shot(v20_win, tank_info, ufo_info);
+            tvu.check_tank_shot();
         }
 
-        if (ufo_shot_is_exploding(ufo_info))
+        if (ufo_shot_is_exploding(tvu.ufo))
         {
             int clean_up;
 
             /* shot is exploding on the ground, animate it */
-            clean_up = ufo_shot_hit_ground(ufo_info);
+            clean_up = ufo_shot_hit_ground(tvu.ufo);
 
             if (clean_up)
             {
                 /* redraw the ground and tank (tank can't be on fire) */
-                mvwhline_set(v20_win, V20_ROWS - 1, 0, &GROUND_CHAR, V20_COLS);
-                tank_move(tank_info);
+                mvwhline_set(tvu.v20_win, V20_ROWS - 1, 0, &GROUND_CHAR,
+                    V20_COLS);
+                tank_move(tvu.tank);
             }
         }
-        else if (ufo_shot_is_falling(ufo_info))
+        else if (ufo_shot_is_falling(tvu.ufo))
         {
             /* check for tank hit */
-            check_ufo_shot(tank_info, ufo_info);
+            tvu.check_ufo_shot();
         }
 
-        print_score(v20_win, ufo_get_tank_score(ufo_info),
-            tank_get_ufo_score(tank_info));
+        tvu.print_score(ufo_get_tank_score(tvu.ufo),
+            tank_get_ufo_score(tvu.tank));
     }
 
-    delwin(v20_win);
-    delwin(vol_win);
+    delwin(tvu.v20_win);
+    delwin(tvu.vol_win);
     endwin();
     close_sound_stream(&sound_data);
     end_sounds();
-    free(ufo_info);
-    free(tank_info);
+    free(tvu.ufo);
+    free(tvu.tank);
     return 0;
 }
 
 
-int handle_keypress(WINDOW* win, WINDOW* vwin, tank_info_t *tank)
+int tank_v_ufo_c::handle_keypress()
 {
     int ch;
     float vol;
 
-    nodelay(win, TRUE);     /* make sure we're in no delay mode */
+    nodelay(v20_win, TRUE); /* make sure we're in no delay mode */
     tank_set_direction(tank, DIR_NONE);
     ch = 0;
 
     while (ERR != ch)
     {
         /* read the next character from the keyboard buffer */
-        ch = wgetch(win);
+        ch = wgetch(v20_win);
 
         switch(ch)
         {
@@ -391,7 +379,8 @@ int handle_keypress(WINDOW* win, WINDOW* vwin, tank_info_t *tank)
 
                     /* play sound */
                     select_sound(tank_sound_data(tank), SOUND_TANK_SHOT);
-                    sound_error = restart_sound_stream(tank_sound_data(tank));
+                    sound_error = restart_sound_stream(
+                        tank_sound_data(tank));
 
                     if (0 != sound_error)
                     {
@@ -404,14 +393,14 @@ int handle_keypress(WINDOW* win, WINDOW* vwin, tank_info_t *tank)
             case '=':
                 /* increase the base volume */
                 vol = increment_volume(tank_sound_data(tank));
-                show_volume_level(vwin, vol);
+                show_volume_level(vol);
                 break;
 
             case '-':
             case '_':
                 /* decrease the base volume */
                 vol = decrement_volume(tank_sound_data(tank));
-                show_volume_level(vwin, vol);
+                show_volume_level(vol);
                 break;
 
             default:
@@ -423,7 +412,7 @@ int handle_keypress(WINDOW* win, WINDOW* vwin, tank_info_t *tank)
 }
 
 
-void check_tank_shot(WINDOW* win, tank_info_t *tank, ufo_info_t *ufo)
+void tank_v_ufo_c::check_tank_shot()
 {
     int dx;
     sound_error_t sound_error;
@@ -436,10 +425,10 @@ void check_tank_shot(WINDOW* win, tank_info_t *tank, ufo_info_t *ufo)
     if (tank_shot_hit(tank))
     {
         /* clear explosion shot */
-        mvwaddch(win, shot_pos.y - 1, shot_pos.x, ' ');
-        mvwaddstr(win, shot_pos.y, shot_pos.x - 1, "   ");
-        mvwaddch(win, shot_pos.y + 1, shot_pos.x, ' ');
-        wrefresh(win);
+        mvwaddch(v20_win, shot_pos.y - 1, shot_pos.x, ' ');
+        mvwaddstr(v20_win, shot_pos.y, shot_pos.x - 1, "   ");
+        mvwaddch(v20_win, shot_pos.y + 1, shot_pos.x, ' ');
+        wrefresh(v20_win);
 
         tank_set_shot_pos(tank, -1, -1);
         tank_set_shot_hit(tank, false);
@@ -463,11 +452,11 @@ void check_tank_shot(WINDOW* win, tank_info_t *tank, ufo_info_t *ufo)
     /* hit */
     tank_set_shot_hit(tank, true);
 
-    wattron(win, COLOR_PAIR(3));       /* fire color */
-    mvwadd_wch(win, shot_pos.y - 1, shot_pos.x, &BOX_CHAR);
-    mvwaddstr(win, shot_pos.y, shot_pos.x - 1, "███");
-    mvwadd_wch(win, shot_pos.y + 1, shot_pos.x, &BOX_CHAR);
-    wattroff(win, COLOR_PAIR(3));
+    wattron(v20_win, COLOR_PAIR(3));       /* fire color */
+    mvwadd_wch(v20_win, shot_pos.y - 1, shot_pos.x, &BOX_CHAR);
+    mvwaddstr(v20_win, shot_pos.y, shot_pos.x - 1, "███");
+    mvwadd_wch(v20_win, shot_pos.y + 1, shot_pos.x, &BOX_CHAR);
+    wattroff(v20_win, COLOR_PAIR(3));
 
     sound_error = ufo_set_falling(ufo);
 
@@ -479,12 +468,12 @@ void check_tank_shot(WINDOW* win, tank_info_t *tank, ufo_info_t *ufo)
     /* ufo shot magically disappears when UFO is hit */
     ufo_clear_shot(ufo, true);
 
-    wrefresh(win);
+    wrefresh(v20_win);
     return;
 }
 
 
-void check_ufo_shot(tank_info_t *tank, ufo_info_t *ufo)
+void tank_v_ufo_c::check_ufo_shot()
 {
     int dx;
     bool hit;
@@ -546,16 +535,16 @@ void check_ufo_shot(tank_info_t *tank, ufo_info_t *ufo)
 }
 
 
-void print_score(WINDOW* win, const uint8_t tank_score,
+void tank_v_ufo_c::print_score(const uint8_t tank_score,
     const uint8_t ufo_score)
 {
-    mvwprintw(win, SCORE_ROW, 5, "%d", ufo_score);
-    mvwprintw(win, SCORE_ROW, 15, "%d", tank_score);
-    wrefresh(win);
+    mvwprintw(v20_win, SCORE_ROW, 5, "%d", ufo_score);
+    mvwprintw(v20_win, SCORE_ROW, 15, "%d", tank_score);
+    wrefresh(v20_win);
 }
 
 
-void show_volume_level(WINDOW *win, const float volume)
+void tank_v_ufo_c::show_volume_level(const float volume)
 {
     int bars;
     int start_y;
@@ -564,13 +553,13 @@ void show_volume_level(WINDOW *win, const float volume)
     start_y = (VOL_ROWS - 2) - bars;
 
     /* erase old bar */
-    mvwvline(win, VOL_ROWS - 2 - 10, 4, ' ', 10);
-    mvwvline(win, VOL_ROWS - 2 - 10, 5, ' ', 10);
+    mvwvline(vol_win, VOL_ROWS - 2 - 10, 4, ' ', 10);
+    mvwvline(vol_win, VOL_ROWS - 2 - 10, 5, ' ', 10);
 
     /* draw new bar in color pair 3 color (same as fire) */
-    wattron(win, COLOR_PAIR(3));
-    mvwvline_set(win, start_y, 4, &BOX_CHAR, bars);
-    mvwvline_set(win, start_y, 5, &BOX_CHAR, bars);
-    wattron(win, COLOR_PAIR(3));
-    wrefresh(win);
+    wattron(vol_win, COLOR_PAIR(3));
+    mvwvline_set(vol_win, start_y, 4, &BOX_CHAR, bars);
+    mvwvline_set(vol_win, start_y, 5, &BOX_CHAR, bars);
+    wattron(vol_win, COLOR_PAIR(3));
+    wrefresh(vol_win);
 }

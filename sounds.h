@@ -33,6 +33,11 @@
 #ifndef  __SOUNDS_H
 #define  __SOUNDS_H
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #include <portaudio.h>
 static const int SAMPLE_RATE = 44100;
 
@@ -71,5 +76,9 @@ void next_ufo_sound(sound_data_t *data);
 
 float increment_volume(sound_data_t *data);
 float decrement_volume(sound_data_t *data);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* ndef  __SOUNDS_H */

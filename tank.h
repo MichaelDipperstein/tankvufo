@@ -33,8 +33,13 @@
 #ifndef  __TANK_H
 #define  __TANK_H
 
-#include "tankvufo.h"
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #include "sounds.h"
+#include "tankvufo.h"
 
 /* struct containing tank related data */
 typedef struct tank_info_t tank_info_t;
@@ -60,5 +65,9 @@ bool tank_is_on_fire(const tank_info_t *tank);
 void tank_set_on_fire(tank_info_t *tank, const bool on_fire);
 
 sound_data_t* tank_sound_data(const tank_info_t *tank);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* ndef  __TANKVUFO_H */
