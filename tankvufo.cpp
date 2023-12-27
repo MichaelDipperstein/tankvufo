@@ -75,10 +75,7 @@ int main(void)
     int win_x, win_y;
     bool result;
 
-    /* used by sound library */
-    sound_data_t sound_data;
-    sound_error_t sound_error;
-
+    /* setup the ncurses field-of-play */
     tvu = new tank_v_ufo_t;
 
     if (nullptr == tvu)
@@ -116,7 +113,14 @@ int main(void)
 
     tvu->initialize_v20_win();
 
+    /* now draw the volume level box */
+    tvu->draw_volume_level_box();
+    tvu->show_volume_level(VOLUME);
+
     /* initialize all of the sound stuff */
+    sound_data_t sound_data;
+    sound_error_t sound_error;
+
     sound_error = initialize_sounds();
 
     if (0 != sound_error)
@@ -134,10 +138,6 @@ int main(void)
         delete tvu;
         return sound_error;
     }
-
-    /* now draw the volume level box */
-    tvu->draw_volume_level_box();
-    tvu->show_volume_level(VOLUME);
 
     /* create and initialize the tank and ufo */
     result = tvu->initialize_vehicles(&sound_data);
@@ -459,6 +459,7 @@ void tank_v_ufo_t::update_ufo_shot(void)
         check_ufo_shot();
     }
 }
+
 
 int tank_v_ufo_t::handle_keypress()
 {
