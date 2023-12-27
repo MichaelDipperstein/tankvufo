@@ -2,8 +2,8 @@
 ## A tribute to Tank-V-UFO, a Commodore VIC-20 Game by Duane Later
 
 ## Description
-This archive contains C source code for an ncursesw implementation of a game
-similar to the game of Tank-V-UFO written by Duane Later for the Commodore
+This archive contains C and C++ source code for an ncursesw implementation of a
+game similar to the game of Tank-V-UFO written by Duane Later for the Commodore
 VIC-20.  The game play is similar to that of the original game play, where
 similar is based on my memory and YouTube videos.
 
@@ -30,7 +30,7 @@ GNU GPL.
 | sounds.c   | Sound effects implemented using PortAudio |
 | tank.h     | C header for tank and tank shot functions |
 | tank.c     | C source for tank and tank shot functions |
-| tankvufo.c | C source to handle all of the game logic |
+| tankvufo.cpp | C++ source to handle all of the game logic |
 | on_fire.h  | Definition of fire sound effect |
 | tank_shot.h | Definition of tank shot sound effect |
 | ufo.h      | C header for ufo and tank shot functions |
@@ -38,7 +38,7 @@ GNU GPL.
 | ufo_falling.h | Definition of ufo falling sound effect |
 
 ## Building
-To build these files with GNU make and gcc:
+To build these files with GNU make and g++:
 1. Open a terminal
 2. Change directory to the directory containing this archive
 3. Enter the command "make" from the command line.
@@ -95,6 +95,10 @@ The + key and - key may be used to increase and decrease the volume.
 
 06/26/21
 * Process entire key buffer in main loop instead of flushing after first key
+
+12/27/23
+* Started migration to C++
+  * So far just the main game field of play
 
 ## TODO
 - Handle overlapping tank and UFO fires
