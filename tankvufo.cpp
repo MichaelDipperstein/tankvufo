@@ -81,6 +81,12 @@ int main(void)
 
     tvu = new tank_v_ufo_t;
 
+    if (nullptr == tvu)
+    {
+        perror("creating tank vs ufo object");
+        return 1;
+    }
+
     /* vic-20 sized window for the game field */
     win_x = (COLS - V20_COLS) / 2;
     win_y = (LINES - V20_ROWS) / 2;
@@ -213,42 +219,11 @@ int main(void)
             break;
         }
 
-        tank_move(tvu->tank);
-        ufo_move(tvu->ufo);
+        tvu->move_tank();
+        tvu->move_ufo();
 
-        if (!tank_shot_hit(tvu->tank))
-        {
-            tank_shot_move(tvu->tank);
-        }
-
-        /* move ufo shot if need (shot exists and isn't exploding) */
-        ufo_move_shot(tvu->ufo);
-
-        if (tank_took_shot(tvu->tank))
-        {
-            /* check for ufo hit */
-            tvu->check_tank_shot();
-        }
-
-        if (ufo_shot_is_exploding(tvu->ufo))
-        {
-            int clean_up;
-
-            /* shot is exploding on the ground, animate it */
-            clean_up = ufo_shot_hit_ground(tvu->ufo);
-
-            if (clean_up)
-            {
-                /* redraw the ground and tank (tank can't be on fire) */
-                tvu->draw_ground();
-                tank_move(tvu->tank);
-            }
-        }
-        else if (ufo_shot_is_falling(tvu->ufo))
-        {
-            /* check for tank hit */
-            tvu->check_ufo_shot();
-        }
+        tvu->update_tank_shot();
+        tvu->update_ufo_shot();
 
         tvu->print_score();
     }
@@ -432,6 +407,144 @@ bool tank_v_ufo_t::initialize_vehicles(sound_data_t *sound_data)
 }
 
 
+void tank_v_ufo_t::move_tank(void)
+{
+    tank_move(tank);
+}
+
+
+void tank_v_ufo_t::move_ufo(void)
+{
+    ufo_move(ufo);
+}
+
+
+void tank_v_ufo_t::update_tank_shot(void)
+{
+    if (!tank_shot_hit(tank))
+    {
+        tank_shot_move(tank);
+    }
+
+    if (tank_took_shot(tank))
+    {
+        /* check for ufo hit */
+        check_tank_shot();
+    }
+}
+
+
+void tank_v_ufo_t::update_ufo_shot(void)
+{
+    /* move ufo shot if need (shot exists and isn't exploding) */
+    ufo_move_shot(ufo);
+
+    if (ufo_shot_is_exploding(ufo))
+    {
+        int clean_up;
+
+        /* shot is exploding on the ground, animate it */
+        clean_up = ufo_shot_hit_ground(ufo);
+
+        if (clean_up)
+        {
+            /* redraw the ground and tank (tank can't be on fire) */
+            draw_ground();
+            move_tank();
+        }
+    }
+    else if (ufo_shot_is_falling(ufo))
+    {
+        /* check for tank hit */
+        check_ufo_shot();
+    }
+}
+
+int tank_v_ufo_t::handle_keypress()
+{
+    int ch;
+    float vol;
+
+    nodelay(v20_win, TRUE); /* make sure we're in no delay mode */
+    tank_set_direction(tank, DIR_NONE);
+    ch = 0;
+
+    while (ERR != ch)
+    {
+        /* read the next character from the keyboard buffer */
+        ch = wgetch(v20_win);
+
+        switch(ch)
+        {
+            case ERR:   /* no more keys */
+                break;
+
+            case 'Q':
+            case 'q':
+                return -1;
+
+            case 'Z':
+            case 'z':
+                if (!tank_is_on_fire(tank))
+                {
+                    tank_set_direction(tank, DIR_LEFT);
+                }
+                break;
+
+            case 'C':
+            case 'c':
+                if (!tank_is_on_fire(tank))
+                {
+                    tank_set_direction(tank, DIR_RIGHT);
+                }
+                break;
+
+            case 'B':
+            case 'b':
+                /* shoot */
+                if (!tank_took_shot(tank) && !tank_is_on_fire(tank))
+                {
+                    sound_error_t sound_error;
+
+                    /* there isn't a shot, so take it */
+                    tank_set_shot_pos(tank, tank_get_pos(tank) + 3,
+                        TANK_SHOT_START_ROW);
+
+                    /* play sound */
+                    select_sound(tank_sound_data(tank), SOUND_TANK_SHOT);
+                    sound_error = restart_sound_stream(
+                        tank_sound_data(tank));
+
+                    if (0 != sound_error)
+                    {
+                        handle_error(sound_error);
+                    }
+                }
+                break;
+
+            case '+':
+            case '=':
+                /* increase the base volume */
+                vol = increment_volume(tank_sound_data(tank));
+                show_volume_level(vol);
+                break;
+
+            case '-':
+            case '_':
+                /* decrease the base volume */
+                vol = decrement_volume(tank_sound_data(tank));
+                show_volume_level(vol);
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    return 0;
+}
+
+
 void tank_v_ufo_t::check_tank_shot()
 {
     int dx;
@@ -552,89 +665,4 @@ void tank_v_ufo_t::check_ufo_shot()
 
         ufo_clear_shot(ufo, false);
     }
-}
-
-
-int tank_v_ufo_t::handle_keypress()
-{
-    int ch;
-    float vol;
-
-    nodelay(v20_win, TRUE); /* make sure we're in no delay mode */
-    tank_set_direction(tank, DIR_NONE);
-    ch = 0;
-
-    while (ERR != ch)
-    {
-        /* read the next character from the keyboard buffer */
-        ch = wgetch(v20_win);
-
-        switch(ch)
-        {
-            case ERR:   /* no more keys */
-                break;
-
-            case 'Q':
-            case 'q':
-                return -1;
-
-            case 'Z':
-            case 'z':
-                if (!tank_is_on_fire(tank))
-                {
-                    tank_set_direction(tank, DIR_LEFT);
-                }
-                break;
-
-            case 'C':
-            case 'c':
-                if (!tank_is_on_fire(tank))
-                {
-                    tank_set_direction(tank, DIR_RIGHT);
-                }
-                break;
-
-            case 'B':
-            case 'b':
-                /* shoot */
-                if (!tank_took_shot(tank) && !tank_is_on_fire(tank))
-                {
-                    sound_error_t sound_error;
-
-                    /* there isn't a shot, so take it */
-                    tank_set_shot_pos(tank, tank_get_pos(tank) + 3,
-                        TANK_SHOT_START_ROW);
-
-                    /* play sound */
-                    select_sound(tank_sound_data(tank), SOUND_TANK_SHOT);
-                    sound_error = restart_sound_stream(
-                        tank_sound_data(tank));
-
-                    if (0 != sound_error)
-                    {
-                        handle_error(sound_error);
-                    }
-                }
-                break;
-
-            case '+':
-            case '=':
-                /* increase the base volume */
-                vol = increment_volume(tank_sound_data(tank));
-                show_volume_level(vol);
-                break;
-
-            case '-':
-            case '_':
-                /* decrease the base volume */
-                vol = decrement_volume(tank_sound_data(tank));
-                show_volume_level(vol);
-                break;
-
-            default:
-                break;
-        }
-    }
-
-    return 0;
 }

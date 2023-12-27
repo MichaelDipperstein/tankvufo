@@ -76,9 +76,6 @@ class tank_v_ufo_t
         tank_v_ufo_t(void);
         ~tank_v_ufo_t(void);
 
-        tank_info_t *tank;
-        ufo_info_t *ufo;
-
         /* vic-20 window methods */
         bool make_v20_win(int rows, int cols, int begin_x, int begin_y);
         void initialize_v20_win(void);
@@ -91,8 +88,12 @@ class tank_v_ufo_t
         void show_volume_level(const float volume);
 
         bool initialize_vehicles(sound_data_t *sound_data);
-        void check_tank_shot(void);
-        void check_ufo_shot(void);
+
+        /* move and update objects */
+        void move_tank(void);
+        void move_ufo(void);
+        void update_tank_shot(void);
+        void update_ufo_shot(void);
 
         int handle_keypress(void);
         void refresh(void) { wrefresh(v20_win); }
@@ -106,9 +107,15 @@ class tank_v_ufo_t
         int vol_rows;
         int vol_cols;
 
+        tank_info_t *tank;
+        ufo_info_t *ufo;
+
         /* cchar_t for unicode charaters used in this file */
         constexpr static cchar_t GROUND_CHAR = {WA_NORMAL, L"▔", 0};
         constexpr static cchar_t BOX_CHAR = {WA_NORMAL, L"█", 0};
+
+        void check_tank_shot(void);
+        void check_ufo_shot(void);
 };
 
 #endif /* ndef  __TANKVUFO_H */
