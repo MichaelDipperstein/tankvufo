@@ -52,7 +52,7 @@ typedef enum
 } sound_t;
 
 
-typedef struct
+typedef struct sound_data_t
 {
     float volume;
     int phase;

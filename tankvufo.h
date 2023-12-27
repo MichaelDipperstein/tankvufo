@@ -36,6 +36,7 @@
 /* forward declarations */
 typedef struct tank_info_t tank_info_t;
 typedef struct ufo_info_t ufo_info_t;
+typedef struct sound_data_t sound_data_t;
 
 /* movement directions used by tank, ufo, and ufo shots */
 typedef enum
@@ -73,27 +74,39 @@ extern const int TANK_SHOT_START_ROW;
 extern const int UFO_BOTTOM;
 extern const int UFO_TOP;
 
-class tank_v_ufo_c
+class tank_v_ufo_t
 {
     public:
-        tank_v_ufo_c(void);
-        ~tank_v_ufo_c(void);
+        tank_v_ufo_t(void);
+        ~tank_v_ufo_t(void);
 
-        WINDOW *v20_win;
         tank_info_t *tank;
         ufo_info_t *ufo;
 
         int handle_keypress(void);
         void check_tank_shot(void);
         void check_ufo_shot(void);
+
+        /* vic-20 window methods */
+        bool make_v20_win(int rows, int cols, int begin_x, int begin_y);
+        void initialize_v20_win(void);
         void print_score(void);
+        void draw_ground(void);
 
         /* volume window methods */
-        void make_vol_win(int rows, int cols, int begin_x, int begin_y);
+        bool make_vol_win(int rows, int cols, int begin_x, int begin_y);
         void draw_volume_level_box(void);
         void show_volume_level(const float volume);
 
+        bool initialize_tank_and_ufo(sound_data_t *sound_data);
+
+        void refresh(void) { wrefresh(v20_win); }
+
     private:
+        WINDOW *v20_win;
+        int v20_rows;
+        int v20_cols;
+
         WINDOW *vol_win;
         int vol_rows;
         int vol_cols;
