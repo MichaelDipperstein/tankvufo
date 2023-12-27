@@ -57,10 +57,6 @@ typedef struct
 
 /* constants defined in tankvufo.c */
 
-/* screen dimensions */
-extern const int V20_COLS;
-extern const int V20_ROWS;
-
 /* score is written to this row */
 extern const int SCORE_ROW;
 
@@ -83,10 +79,6 @@ class tank_v_ufo_t
         tank_info_t *tank;
         ufo_info_t *ufo;
 
-        int handle_keypress(void);
-        void check_tank_shot(void);
-        void check_ufo_shot(void);
-
         /* vic-20 window methods */
         bool make_v20_win(int rows, int cols, int begin_x, int begin_y);
         void initialize_v20_win(void);
@@ -98,8 +90,11 @@ class tank_v_ufo_t
         void draw_volume_level_box(void);
         void show_volume_level(const float volume);
 
-        bool initialize_tank_and_ufo(sound_data_t *sound_data);
+        bool initialize_vehicles(sound_data_t *sound_data);
+        void check_tank_shot(void);
+        void check_ufo_shot(void);
 
+        int handle_keypress(void);
         void refresh(void) { wrefresh(v20_win); }
 
     private:
@@ -111,6 +106,9 @@ class tank_v_ufo_t
         int vol_rows;
         int vol_cols;
 
+        /* cchar_t for unicode charaters used in this file */
+        constexpr static cchar_t GROUND_CHAR = {WA_NORMAL, L"▔", 0};
+        constexpr static cchar_t BOX_CHAR = {WA_NORMAL, L"█", 0};
 };
 
 #endif /* ndef  __TANKVUFO_H */

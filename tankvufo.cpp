@@ -67,10 +67,6 @@ constexpr int UFO_TOP = SCORE_ROW + 2;
 static constexpr int VOL_COLS = 10;
 static constexpr int VOL_ROWS = 13;
 
-/* cchar_t for unicode charaters used in this file */
-static constexpr cchar_t GROUND_CHAR = {WA_NORMAL, L"▔", 0};
-static constexpr cchar_t BOX_CHAR = {WA_NORMAL, L"█", 0};
-
 static constexpr float VOLUME = 0.5;    /* base volume for sounds */
 
 int main(void)
@@ -138,7 +134,7 @@ int main(void)
     tvu->show_volume_level(VOLUME);
 
     /* create and initialize the tank and ufo */
-    result = tvu->initialize_tank_and_ufo(&sound_data);
+    result = tvu->initialize_vehicles(&sound_data);
 
     if (false == result)
     {
@@ -149,7 +145,6 @@ int main(void)
         return 1;
     }
 
-    tank_move(tvu->tank);                   /* draw tank */
     tvu->print_score();                     /* 0 - 0 score */
     tvu->refresh();
 
@@ -264,6 +259,7 @@ int main(void)
     return 0;
 }
 
+
 tank_v_ufo_t::tank_v_ufo_t(void)
 {
     /* ncurses initialization */
@@ -278,6 +274,7 @@ tank_v_ufo_t::tank_v_ufo_t(void)
     init_pair(1, COLOR_BLACK, COLOR_CYAN);
     bkgd(COLOR_PAIR(1));
 }
+
 
 tank_v_ufo_t::~tank_v_ufo_t(void)
 {
@@ -303,89 +300,137 @@ tank_v_ufo_t::~tank_v_ufo_t(void)
         free(ufo);
     }
 }
-int tank_v_ufo_t::handle_keypress()
+
+
+void tank_v_ufo_t::print_score()
 {
-    int ch;
-    float vol;
+    mvwprintw(v20_win, SCORE_ROW, 5, "%d", tank_get_ufo_score(tank));
+    mvwprintw(v20_win, SCORE_ROW, 15, "%d", ufo_get_tank_score(ufo));
+    wrefresh(v20_win);
+}
 
-    nodelay(v20_win, TRUE); /* make sure we're in no delay mode */
-    tank_set_direction(tank, DIR_NONE);
-    ch = 0;
 
-    while (ERR != ch)
+void tank_v_ufo_t::initialize_v20_win(void)
+{
+    /* set the window color scheme */
+    init_pair(2, COLOR_BLACK, COLOR_WHITE);
+    wbkgd(v20_win, COLOR_PAIR(2));
+
+    /* pair 3 will be for fire */
+    init_pair(3, COLOR_RED, COLOR_WHITE);
+
+    /* print the banner */
+    wprintw(v20_win, "** TANK VERSUS UFO. **");
+    wprintw(v20_win, "Z-LEFT,C-RIGHT,B-FIRE ");
+    wprintw(v20_win, "UFO:     TANK:");
+
+    draw_ground();
+
+    wtimeout(v20_win, 0);           /* make wgetch non-blocking */
+}
+
+
+bool tank_v_ufo_t::make_v20_win(int rows, int cols, int begin_x, int begin_y)
+{
+    bool result;
+    result = false;
+
+    v20_win = newwin(rows, cols, begin_x, begin_y);
+
+    if (v20_win != nullptr)
     {
-        /* read the next character from the keyboard buffer */
-        ch = wgetch(v20_win);
+        result = true;
+        v20_rows = rows;
+        v20_cols = cols;
+    }
 
-        switch(ch)
+    return result;
+}
+
+
+void tank_v_ufo_t::draw_ground(void)
+{
+    mvwhline_set(v20_win, v20_rows - 1, 0, &GROUND_CHAR, v20_cols);
+}
+
+
+bool tank_v_ufo_t::make_vol_win(int rows, int cols, int begin_x, int begin_y)
+{
+    bool result;
+    result = false;
+
+    vol_win = newwin(rows, cols, begin_x, begin_y);
+
+    if (vol_win != nullptr)
+    {
+        result = true;
+        vol_rows = rows;
+        vol_cols = cols;
+
+        /* list of commands not in the original game */
+        attron(A_UNDERLINE);
+        mvprintw(2, 5, "ADDED COMMANDS");
+        attroff(A_UNDERLINE);
+        mvprintw(3, 2, "Q        - QUIT GAME");
+        mvprintw(4, 2, "PLUS(+)  - VOLUME UP");
+        mvprintw(5, 2, "MINUS(-) - VOLUME DOWN");
+    }
+
+    return result;
+}
+
+
+void tank_v_ufo_t::draw_volume_level_box(void)
+{
+    wbkgd(vol_win, COLOR_PAIR(2));
+    box(vol_win, 0, 0);
+    mvwaddch(vol_win, 1, 1, '+');
+    mvwaddch(vol_win, vol_rows - 3, 1, '-');
+    mvwaddstr(vol_win, vol_rows - 2, 1, " VOLUME ");
+}
+
+
+void tank_v_ufo_t::show_volume_level(const float volume)
+{
+    int bars;
+    int start_y;
+
+    bars = (int)(volume * 10.0 + 0.5);
+    start_y = (vol_rows - 2) - bars;
+
+    /* erase old bar */
+    mvwvline(vol_win, vol_rows - 2 - 10, 4, ' ', 10);
+    mvwvline(vol_win, vol_rows - 2 - 10, 5, ' ', 10);
+
+    /* draw new bar in color pair 3 color (same as fire) */
+    wattron(vol_win, COLOR_PAIR(3));
+    mvwvline_set(vol_win, start_y, 4, &BOX_CHAR, bars);
+    mvwvline_set(vol_win, start_y, 5, &BOX_CHAR, bars);
+    wattron(vol_win, COLOR_PAIR(3));
+    wrefresh(vol_win);
+}
+
+
+bool tank_v_ufo_t::initialize_vehicles(sound_data_t *sound_data)
+{
+    bool result;
+    result = false;
+
+    tank = tank_initialize(v20_win, sound_data);
+
+    if (nullptr != tank)
+    {
+        ufo = ufo_initialize(v20_win, sound_data);
+
+        if (nullptr != ufo)
         {
-            case ERR:   /* no more keys */
-                break;
-
-            case 'Q':
-            case 'q':
-                return -1;
-
-            case 'Z':
-            case 'z':
-                if (!tank_is_on_fire(tank))
-                {
-                    tank_set_direction(tank, DIR_LEFT);
-                }
-                break;
-
-            case 'C':
-            case 'c':
-                if (!tank_is_on_fire(tank))
-                {
-                    tank_set_direction(tank, DIR_RIGHT);
-                }
-                break;
-
-            case 'B':
-            case 'b':
-                /* shoot */
-                if (!tank_took_shot(tank) && !tank_is_on_fire(tank))
-                {
-                    sound_error_t sound_error;
-
-                    /* there isn't a shot, so take it */
-                    tank_set_shot_pos(tank, tank_get_pos(tank) + 3,
-                        TANK_SHOT_START_ROW);
-
-                    /* play sound */
-                    select_sound(tank_sound_data(tank), SOUND_TANK_SHOT);
-                    sound_error = restart_sound_stream(
-                        tank_sound_data(tank));
-
-                    if (0 != sound_error)
-                    {
-                        handle_error(sound_error);
-                    }
-                }
-                break;
-
-            case '+':
-            case '=':
-                /* increase the base volume */
-                vol = increment_volume(tank_sound_data(tank));
-                show_volume_level(vol);
-                break;
-
-            case '-':
-            case '_':
-                /* decrease the base volume */
-                vol = decrement_volume(tank_sound_data(tank));
-                show_volume_level(vol);
-                break;
-
-            default:
-                break;
+            result = true;
         }
     }
 
-    return 0;
+    return result;
 }
+
 
 void tank_v_ufo_t::check_tank_shot()
 {
@@ -509,125 +554,87 @@ void tank_v_ufo_t::check_ufo_shot()
     }
 }
 
-void tank_v_ufo_t::print_score()
+
+int tank_v_ufo_t::handle_keypress()
 {
-    mvwprintw(v20_win, SCORE_ROW, 5, "%d", tank_get_ufo_score(tank));
-    mvwprintw(v20_win, SCORE_ROW, 15, "%d",  ufo_get_tank_score(ufo));
-    wrefresh(v20_win);
-}
+    int ch;
+    float vol;
 
-void tank_v_ufo_t::initialize_v20_win(void)
-{
-    /* set the window color scheme */
-    init_pair(2, COLOR_BLACK, COLOR_WHITE);
-    wbkgd(v20_win, COLOR_PAIR(2));
+    nodelay(v20_win, TRUE); /* make sure we're in no delay mode */
+    tank_set_direction(tank, DIR_NONE);
+    ch = 0;
 
-    /* pair 3 will be for fire */
-    init_pair(3, COLOR_RED, COLOR_WHITE);
-
-    /* print the banner */
-    wprintw(v20_win, "** TANK VERSUS UFO. **");
-    wprintw(v20_win, "Z-LEFT,C-RIGHT,B-FIRE ");
-    wprintw(v20_win, "UFO:     TANK:");
-
-    draw_ground();
-
-    wtimeout(v20_win, 0);           /* make wgetch non-blocking */
-}
-
-bool tank_v_ufo_t::make_v20_win(int rows, int cols, int begin_x, int begin_y)
-{
-    bool result;
-    result = false;
-
-    v20_win = newwin(rows, cols, begin_x, begin_y);
-
-    if (v20_win != nullptr)
+    while (ERR != ch)
     {
-        result = true;
-        v20_rows = rows;
-        v20_cols = cols;
-    }
+        /* read the next character from the keyboard buffer */
+        ch = wgetch(v20_win);
 
-    return result;
-}
-
-void tank_v_ufo_t::draw_ground(void)
-{
-    mvwhline_set(v20_win, v20_rows - 1, 0, &GROUND_CHAR, v20_cols);
-}
-
-
-bool tank_v_ufo_t::make_vol_win(int rows, int cols, int begin_x, int begin_y)
-{
-    bool result;
-    result = false;
-
-    vol_win = newwin(rows, cols, begin_x, begin_y);
-
-    if (vol_win != nullptr)
-    {
-        result = true;
-        vol_rows = rows;
-        vol_cols = cols;
-
-        /* list of commands not in the original game */
-        attron(A_UNDERLINE);
-        mvprintw(2, 5, "ADDED COMMANDS");
-        attroff(A_UNDERLINE);
-        mvprintw(3, 2, "Q        - QUIT GAME");
-        mvprintw(4, 2, "PLUS(+)  - VOLUME UP");
-        mvprintw(5, 2, "MINUS(-) - VOLUME DOWN");
-    }
-
-    return result;
-}
-
-void tank_v_ufo_t::draw_volume_level_box(void)
-{
-    wbkgd(vol_win, COLOR_PAIR(2));
-    box(vol_win, 0, 0);
-    mvwaddch(vol_win, 1, 1, '+');
-    mvwaddch(vol_win, vol_rows - 3, 1, '-');
-    mvwaddstr(vol_win, vol_rows - 2, 1, " VOLUME ");
-}
-
-void tank_v_ufo_t::show_volume_level(const float volume)
-{
-    int bars;
-    int start_y;
-
-    bars = (int)(volume * 10.0 + 0.5);
-    start_y = (vol_rows - 2) - bars;
-
-    /* erase old bar */
-    mvwvline(vol_win, vol_rows - 2 - 10, 4, ' ', 10);
-    mvwvline(vol_win, vol_rows - 2 - 10, 5, ' ', 10);
-
-    /* draw new bar in color pair 3 color (same as fire) */
-    wattron(vol_win, COLOR_PAIR(3));
-    mvwvline_set(vol_win, start_y, 4, &BOX_CHAR, bars);
-    mvwvline_set(vol_win, start_y, 5, &BOX_CHAR, bars);
-    wattron(vol_win, COLOR_PAIR(3));
-    wrefresh(vol_win);
-}
-
-bool tank_v_ufo_t::initialize_tank_and_ufo(sound_data_t *sound_data)
-{
-    bool result;
-    result = false;
-
-    tank = tank_initialize(v20_win, sound_data);
-
-    if (nullptr != tank)
-    {
-        ufo = ufo_initialize(v20_win, sound_data);
-
-        if (nullptr != ufo)
+        switch(ch)
         {
-            result = true;
+            case ERR:   /* no more keys */
+                break;
+
+            case 'Q':
+            case 'q':
+                return -1;
+
+            case 'Z':
+            case 'z':
+                if (!tank_is_on_fire(tank))
+                {
+                    tank_set_direction(tank, DIR_LEFT);
+                }
+                break;
+
+            case 'C':
+            case 'c':
+                if (!tank_is_on_fire(tank))
+                {
+                    tank_set_direction(tank, DIR_RIGHT);
+                }
+                break;
+
+            case 'B':
+            case 'b':
+                /* shoot */
+                if (!tank_took_shot(tank) && !tank_is_on_fire(tank))
+                {
+                    sound_error_t sound_error;
+
+                    /* there isn't a shot, so take it */
+                    tank_set_shot_pos(tank, tank_get_pos(tank) + 3,
+                        TANK_SHOT_START_ROW);
+
+                    /* play sound */
+                    select_sound(tank_sound_data(tank), SOUND_TANK_SHOT);
+                    sound_error = restart_sound_stream(
+                        tank_sound_data(tank));
+
+                    if (0 != sound_error)
+                    {
+                        handle_error(sound_error);
+                    }
+                }
+                break;
+
+            case '+':
+            case '=':
+                /* increase the base volume */
+                vol = increment_volume(tank_sound_data(tank));
+                show_volume_level(vol);
+                break;
+
+            case '-':
+            case '_':
+                /* decrease the base volume */
+                vol = decrement_volume(tank_sound_data(tank));
+                show_volume_level(vol);
+                break;
+
+            default:
+                break;
         }
     }
 
-    return result;
+    return 0;
 }

@@ -47,6 +47,8 @@ struct ufo_info_t
     uint8_t shot_hit_ground;    /* 0 if false, otherwise phase of explosion */
     uint8_t number_died;        /* number of ufos that died (tank score) */
     WINDOW *win;                /* ncurses window for the ufo and its shot */
+    int rows;                   /* window rows */
+    int cols;                   /* window columns */
     sound_data_t *sound_data;
 };
 
@@ -76,6 +78,7 @@ ufo_info_t *ufo_initialize(WINDOW *window, sound_data_t *sound_data)
     ufo->shot_hit_ground = 0;
     ufo->number_died = 0;
     ufo->win = window;
+    getmaxyx(window, ufo->rows, ufo->cols);
     ufo->sound_data = sound_data;
 
     srand((unsigned int)time(NULL));    /* seed the random number generator */
@@ -111,7 +114,7 @@ void ufo_move(ufo_info_t *ufo)
             else
             {
                 /* start on right */
-                ufo->pos.x = V20_COLS - 4;
+                ufo->pos.x = ufo->cols - 4;
                 ufo->direction = DIR_LEFT;
             }
 
@@ -121,7 +124,7 @@ void ufo_move(ufo_info_t *ufo)
 
         case DIR_RIGHT:
             /* ufo is moving right */
-            if ((UFO_BOTTOM == ufo->pos.y) && (V20_COLS - 3 == ufo->pos.x))
+            if ((UFO_BOTTOM == ufo->pos.y) && (ufo->cols - 3 == ufo->pos.x))
             {
                 /* we're at the bottom , done with this one */
                 mvwaddstr(win, ufo->pos.y, ufo->pos.x, "   ");
@@ -129,7 +132,7 @@ void ufo_move(ufo_info_t *ufo)
                 ufo->pos.y = 0;
                 ufo->direction = DIR_NONE;
             }
-            else if (V20_COLS == ufo->pos.x)
+            else if (ufo->cols == ufo->pos.x)
             {
                 /* ufo is at the edge, remove old ufo */
                 mvwaddstr(win, ufo->pos.y, ufo->pos.x, "   ");
@@ -169,7 +172,7 @@ void ufo_move(ufo_info_t *ufo)
                 else
                 {
                     /* wrap around */
-                    ufo->pos.x = V20_COLS - 2;
+                    ufo->pos.x = ufo->cols - 2;
                     mvwaddstr(win, ufo->pos.y, ufo->pos.x, "<*>");
                 }
             }
@@ -187,7 +190,7 @@ void ufo_move(ufo_info_t *ufo)
             /* ufo is falling right, remove old ufo */
             mvwaddstr(win, ufo->pos.y, ufo->pos.x, "   ");
 
-            if (V20_COLS == ufo->pos.x)
+            if (ufo->cols == ufo->pos.x)
             {
                 /* go down one row and start at left */
                 ufo->pos.x = 0;
@@ -222,7 +225,7 @@ void ufo_move(ufo_info_t *ufo)
             if (2 == ufo->pos.x)
             {
                 /* ufo is at the left edge, wrap around */
-                ufo->pos.x = V20_COLS - 2;
+                ufo->pos.x = ufo->cols - 2;
                 ufo->pos.y++;
                 mvwaddstr(win, ufo->pos.y, ufo->pos.x, "<*>");
             }
@@ -256,7 +259,7 @@ void ufo_move(ufo_info_t *ufo)
                 mvwaddstr(win, ufo->pos.y, ufo->pos.x, "   ");
 
                 /* redraw the ground */
-                mvwhline_set(win, V20_ROWS - 1, 0, &GROUND_CHAR, V20_COLS);
+                mvwhline_set(win, ufo->rows - 1, 0, &GROUND_CHAR, ufo->cols);
 
                 /* stop the fire sound */
                 select_sound(ufo->sound_data, SOUND_OFF);

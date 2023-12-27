@@ -44,6 +44,8 @@ struct tank_info_t
     uint8_t on_fire;            /* 0 when not on fire, otherwise flame count */
     uint8_t number_died;        /* number of tanks that died (ufo score) */
     WINDOW* win;                /* ncurses window for the tank and its shot */
+    int rows;                   /* window rows */
+    int cols;                   /* window columns */
     sound_data_t *sound_data;
 };
 
@@ -69,6 +71,7 @@ tank_info_t *tank_initialize(WINDOW *window, sound_data_t *sound_data)
     tank->on_fire = 0;
     tank->number_died = 0;
     tank->win = window;
+    getmaxyx(window, tank->rows, tank->cols);
     tank->sound_data = sound_data;
 
     return tank;
@@ -140,7 +143,7 @@ void tank_move(tank_info_t *tank)
     }
     else if (DIR_RIGHT == tank->direction)
     {
-        if (tank->x == V20_COLS - 6)
+        if (tank->x == tank->cols - 6)
         {
             /* can't go furter right */
             return;
