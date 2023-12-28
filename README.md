@@ -29,7 +29,7 @@ GNU GPL.
 | sounds.h   | C header for sound effect functions |
 | sounds.c   | Sound effects implemented using PortAudio |
 | tank.h     | C header for tank and tank shot functions |
-| tank.c     | C source for tank and tank shot functions |
+| tank.cpp   | C++ source for tank and tank shot functions |
 | tankvufo.cpp | C++ source to handle all of the game logic |
 | on_fire.h  | Definition of fire sound effect |
 | tank_shot.h | Definition of tank shot sound effect |
@@ -98,7 +98,7 @@ The + key and - key may be used to increase and decrease the volume.
 
 12/27/23
 * Started migration to C++
-  * So far just the main game field of play
+  * So far just the main game field of play and tank
 
 ## TODO
 - Handle overlapping tank and UFO fires

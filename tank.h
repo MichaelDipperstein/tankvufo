@@ -42,24 +42,24 @@ class tank_t
         tank_t(WINDOW *window, sound_data_t *sd);
 
         /* movement and position */
-        void tank_move(void);
-        void tank_set_direction(const direction_t dir);
-        uint8_t tank_get_pos(void);
-        uint8_t tank_get_ufo_score(void);
+        void move(void);
+        void set_direction(const direction_t dir);
+        uint8_t get_pos(void);
+        uint8_t get_tanks_killed(void);
 
         /* tank shot movement and position */
-        void tank_shot_move(void);
-        bool tank_took_shot(void);
-        pos_t tank_get_shot_pos(void);
-        void tank_set_shot_pos(const int8_t x, const int8_t y);
-        bool tank_shot_hit(void);
-        void tank_set_shot_hit(const bool hit);
+        void move_shot(void);
+        bool was_shot_fired(void) const;
+        pos_t get_shot_pos(void) const;
+        void set_shot_pos(const int8_t x, const int8_t y);
+        bool did_shot_hit(void) const;
+        void set_shot_hit(const bool hit);
 
         /* flaming status */
-        bool tank_is_on_fire(void);
-        void tank_set_on_fire(const bool of);
+        bool is_on_fire(void) const;
+        void set_on_fire(const bool of);
 
-        sound_data_t* tank_sound_data(void);
+        sound_data_t* get_sound_data(void) const;
 
     private:
         uint8_t x;              /* leftmost tank coordinate */

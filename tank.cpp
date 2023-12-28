@@ -35,10 +35,6 @@
 
 #include "tank.h"
 
-struct tank_info_t
-{
-};
-
 /* cchar_t for unicode charaters used in this file */
 static const cchar_t TANK_SHOT_CHAR = {WA_NORMAL, L"▪", 0};
 static const cchar_t BOX_CHAR = {WA_NORMAL, L"█", 0};
@@ -59,7 +55,7 @@ tank_t::tank_t(WINDOW *window, sound_data_t *sd)
 
 
 /* move the tank or flames of hit tank and record death */
-void tank_t::tank_move(void)
+void tank_t::move(void)
 {
     if (10 == on_fire)
     {
@@ -137,25 +133,25 @@ void tank_t::tank_move(void)
 }
 
 
-void tank_t::tank_set_direction(const direction_t dir)
+void tank_t::set_direction(const direction_t dir)
 {
     direction = dir;
 }
 
 
-uint8_t tank_t::tank_get_pos(void)
+uint8_t tank_t::get_pos(void)
 {
     return x;
 }
 
 
-uint8_t tank_t::tank_get_ufo_score(void)
+uint8_t tank_t::get_tanks_killed(void)
 {
     return number_died;
 }
 
 
-void tank_t::tank_shot_move(void)
+void tank_t::move_shot(void)
 {
     if ((shot_pos.y < 0) || (shot_hit))
     {
@@ -209,45 +205,45 @@ void tank_t::tank_shot_move(void)
 }
 
 
-bool tank_t::tank_took_shot(void)
+bool tank_t::was_shot_fired(void) const
 {
     return (shot_pos.y != -1);
 }
 
 
-pos_t tank_t::tank_get_shot_pos(void)
+pos_t tank_t::get_shot_pos(void) const
 {
     return shot_pos;
 }
 
 
-void tank_t::tank_set_shot_pos(const int8_t x, const int8_t y)
+void tank_t::set_shot_pos(const int8_t x, const int8_t y)
 {
     shot_pos.x = x;
     shot_pos.y = y;
 }
 
 
-bool tank_t::tank_shot_hit(void)
+bool tank_t::did_shot_hit(void) const
 {
     return shot_hit;
 }
 
 
-void tank_t::tank_set_shot_hit(const bool hit)
+void tank_t::set_shot_hit(const bool hit)
 {
     shot_hit = hit;
 }
 
 
-bool tank_t::tank_is_on_fire(void)
+bool tank_t::is_on_fire(void) const
 {
     /* on_fire is a counter 0 == not on fire */
     return on_fire != 0;
 }
 
 
-void tank_t::tank_set_on_fire(const bool of)
+void tank_t::set_on_fire(const bool of)
 {
     /* on_fire is a counter 0 == not on fire */
     if (of)
@@ -261,7 +257,7 @@ void tank_t::tank_set_on_fire(const bool of)
 }
 
 
-sound_data_t* tank_t::tank_sound_data(void)
+sound_data_t* tank_t::get_sound_data(void) const
 {
     return sound_data;
 }
