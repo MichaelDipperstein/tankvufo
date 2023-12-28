@@ -34,7 +34,7 @@
 #define  __TANKVUFO_H
 
 /* forward declarations */
-typedef struct tank_info_t tank_info_t;
+class tank_t;
 typedef struct ufo_info_t ufo_info_t;
 typedef struct sound_data_t sound_data_t;
 
@@ -107,7 +107,7 @@ class tank_v_ufo_t
         int vol_rows;
         int vol_cols;
 
-        tank_info_t *tank;
+        tank_t *tank;
         ufo_info_t *ufo;
 
         /* cchar_t for unicode charaters used in this file */

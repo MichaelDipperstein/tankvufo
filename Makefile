@@ -18,7 +18,7 @@ tankvufo:	tankvufo.o tank.o ufo.o sounds.o
 tankvufo.o:	tankvufo.cpp sounds.h tankvufo.h tank.h ufo.h
 		$(CPP) $(CFLAGS) -c $< -o $@
 
-tank.o:	tank.c tank.h sounds.h tankvufo.h
+tank.o:	tank.cpp tank.h sounds.h tankvufo.h
 		$(CPP) $(CFLAGS) -c $< -o $@
 
 ufo.o:	ufo.c ufo.h sounds.h tankvufo.h

@@ -33,41 +33,45 @@
 #ifndef  __TANK_H
 #define  __TANK_H
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
 #include "sounds.h"
 #include "tankvufo.h"
 
-/* struct containing tank related data */
-typedef struct tank_info_t tank_info_t;
+class tank_t
+{
+    public:
+        tank_t(WINDOW *window, sound_data_t *sd);
 
-tank_info_t *tank_initialize(WINDOW *window, sound_data_t *sound_data);
+        /* movement and position */
+        void tank_move(void);
+        void tank_set_direction(const direction_t dir);
+        uint8_t tank_get_pos(void);
+        uint8_t tank_get_ufo_score(void);
 
-/* movement and position */
-void tank_move(tank_info_t *tank);
-void tank_set_direction(tank_info_t *tank, const direction_t direction);
-uint8_t tank_get_pos(const tank_info_t *tank);
-uint8_t tank_get_ufo_score(const tank_info_t *tank);
+        /* tank shot movement and position */
+        void tank_shot_move(void);
+        bool tank_took_shot(void);
+        pos_t tank_get_shot_pos(void);
+        void tank_set_shot_pos(const int8_t x, const int8_t y);
+        bool tank_shot_hit(void);
+        void tank_set_shot_hit(const bool hit);
 
-/* tank shot movement and position */
-void tank_shot_move(tank_info_t *tank);
-bool tank_took_shot(const tank_info_t *tank);
-pos_t tank_get_shot_pos(const tank_info_t *tank);
-void tank_set_shot_pos(tank_info_t *tank, const int8_t x, const int8_t y);
-bool tank_shot_hit(const tank_info_t *tank);
-void tank_set_shot_hit(tank_info_t *tank, const bool hit);
+        /* flaming status */
+        bool tank_is_on_fire(void);
+        void tank_set_on_fire(const bool of);
 
-/* flaming status */
-bool tank_is_on_fire(const tank_info_t *tank);
-void tank_set_on_fire(tank_info_t *tank, const bool on_fire);
+        sound_data_t* tank_sound_data(void);
 
-sound_data_t* tank_sound_data(const tank_info_t *tank);
-
-#ifdef __cplusplus
-}
-#endif
+    private:
+        uint8_t x;              /* leftmost tank coordinate */
+        direction_t direction;  /* direction of next tank move */
+        pos_t shot_pos;         /* x & y coordinate of tank shot */
+        bool shot_hit;          /* true if the ufo was just hit (+ displayed) */
+        uint8_t on_fire;        /* 0 when not on fire, otherwise flame count */
+        uint8_t number_died;    /* number of tanks that died (ufo score) */
+        WINDOW* win;            /* ncurses window for the tank and its shot */
+        int rows;               /* window rows */
+        int cols;               /* window columns */
+        sound_data_t *sound_data;
+};
 
 #endif /* ndef  __TANKVUFO_H */
