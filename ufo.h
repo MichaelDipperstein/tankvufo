@@ -42,20 +42,20 @@ class ufo_t
         ufo_t(WINDOW *window, sound_data_t *sd);
 
         /* ufo shot movement and information */
-        void ufo_move(void);
-        pos_t ufo_get_pos(void) const;
-        uint8_t ufo_get_tank_score(void) const;
+        void move(void);
+        pos_t get_pos(void) const;
+        uint8_t get_ufos_killed(void) const;
 
         /* start falling direction and sound */
-        sound_error_t ufo_set_falling(void);
+        sound_error_t set_falling(void);
 
         /* ufo shot movement and information */
-        void ufo_move_shot(void);
-        pos_t ufo_get_shot_pos(void) const;
-        void ufo_clear_shot(bool erase);
-        bool ufo_shot_is_falling(void) const;
-        bool ufo_shot_is_exploding(void) const;
-        int ufo_shot_hit_ground(void);
+        void move_shot(void);
+        pos_t get_shot_pos(void) const;
+        void clear_shot(bool erase);
+        bool is_shot_falling(void) const;
+        bool is_shot_exploding(void) const;
+        int update_shot_phase(void);
 
     private:
         pos_t pos;                  /* column and row containing the ufo */

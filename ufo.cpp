@@ -66,7 +66,7 @@ ufo_t::ufo_t(WINDOW *window, sound_data_t *sd)
 }
 
 
-void ufo_t::ufo_move(void)
+void ufo_t::move(void)
 {
     switch (direction)
     {
@@ -267,19 +267,19 @@ void ufo_t::ufo_move(void)
 }
 
 
-pos_t ufo_t::ufo_get_pos(void) const
+pos_t ufo_t::get_pos(void) const
 {
     return pos;
 }
 
 
-uint8_t ufo_t::ufo_get_tank_score(void) const
+uint8_t ufo_t::get_ufos_killed(void) const
 {
     return number_died;
 }
 
 
-sound_error_t ufo_t::ufo_set_falling(void)
+sound_error_t ufo_t::set_falling(void)
 {
     sound_error_t sound_error;
 
@@ -334,7 +334,7 @@ void ufo_t::ufo_shot_decision(void)
     /* 1 in 3 chance of non-shooter to shoot */
     if (0 == (rand() % 3))
     {
-        /* prime the position for ufo_move_shot()  */
+        /* prime the position for move_shot()  */
         if (DIR_RIGHT == direction)
         {
             /* shot will head right */
@@ -353,7 +353,7 @@ void ufo_t::ufo_shot_decision(void)
 }
 
 
-void ufo_t::ufo_move_shot(void)
+void ufo_t::move_shot(void)
 {
     cchar_t c;
 
@@ -400,13 +400,13 @@ void ufo_t::ufo_move_shot(void)
 }
 
 
-pos_t ufo_t::ufo_get_shot_pos(void) const
+pos_t ufo_t::get_shot_pos(void) const
 {
     return shot_pos;
 }
 
 
-void ufo_t::ufo_clear_shot(bool erase)
+void ufo_t::clear_shot(bool erase)
 {
     if (erase && (-1 != shot_pos.y))
     {
@@ -429,19 +429,19 @@ void ufo_t::ufo_clear_shot(bool erase)
 }
 
 
-bool ufo_t::ufo_shot_is_falling(void) const
+bool ufo_t::is_shot_falling(void) const
 {
     return (DIR_NONE != shot_direction);
 }
 
 
-bool ufo_t::ufo_shot_is_exploding(void) const
+bool ufo_t::is_shot_exploding(void) const
 {
     return (0 != shot_hit_ground);
 }
 
 
-int ufo_t::ufo_shot_hit_ground(void)
+int ufo_t::update_shot_phase(void)
 {
     int clean_up = 0;
     int8_t shot_x;

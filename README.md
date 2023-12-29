@@ -30,11 +30,12 @@ GNU GPL.
 | sounds.c   | Sound effects implemented using PortAudio |
 | tank.h     | C header for tank and tank shot functions |
 | tank.cpp   | C++ source for tank and tank shot functions |
+| tankvufo.h | Header for all of the game logic |
 | tankvufo.cpp | C++ source to handle all of the game logic |
 | on_fire.h  | Definition of fire sound effect |
 | tank_shot.h | Definition of tank shot sound effect |
 | ufo.h      | C header for ufo and tank shot functions |
-| ufo.c      | C source for ufo and tank shot functions |
+| ufo.cpp    | C++ source for ufo and tank shot functions |
 | ufo_falling.h | Definition of ufo falling sound effect |
 
 ## Building
