@@ -39,7 +39,7 @@
 class tank_t
 {
     public:
-        tank_t(WINDOW *window, sound_data_t *sd);
+        tank_t(WINDOW *window, const int min_y, sound_data_t *sd);
 
         /* movement and position */
         void move(void);
@@ -65,6 +65,7 @@ class tank_t
         uint8_t x;              /* leftmost tank coordinate */
         direction_t direction;  /* direction of next tank move */
         pos_t shot_pos;         /* x & y coordinate of tank shot */
+        int min_shot_y;         /* minimum y coordinate of shot */
         bool shot_hit;          /* true if the ufo was just hit (+ displayed) */
         uint8_t on_fire;        /* 0 when not on fire, otherwise flame count */
         uint8_t number_died;    /* number of tanks that died (ufo score) */

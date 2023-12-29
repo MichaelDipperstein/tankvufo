@@ -39,7 +39,7 @@
 class ufo_t
 {
     public:
-        ufo_t(WINDOW *window, sound_data_t *sd);
+        ufo_t(WINDOW *window, int upper_lim, int lower_lim, sound_data_t *sd);
 
         /* ufo shot movement and information */
         void move(void);
@@ -59,6 +59,8 @@ class ufo_t
 
     private:
         pos_t pos;                  /* column and row containing the ufo */
+        int upper_limit;            /* top of ufo travel */
+        int lower_limit;            /* bottom of ufo travel */
         direction_t direction;      /* direction that the UFO is moving */
         uint8_t ufo_hit_ground;     /* 0 when not on fire, otherwise flame count */
         pos_t shot_pos;             /* x and y coordinate of ufo shot */

@@ -36,21 +36,17 @@
 
 #include "ufo.h"
 
-/* struct containing ufo related data */
-struct ufo_info_t
-{
-};
-
-
 /* cchar_t for unicode charaters used in this file */
 static const cchar_t GROUND_CHAR = {WA_NORMAL, L"▔", 0};
 static const cchar_t UFO_SHOT_CHAR = {WA_NORMAL, L"●", 0};
 
-ufo_t::ufo_t(WINDOW *window, sound_data_t *sd)
+ufo_t::ufo_t(WINDOW *window, int upper_lim, int lower_lim, sound_data_t *sd)
 {
     /* start without a ufo and no shot */
     pos.x = 0;
     pos.y = 0;
+    upper_limit = upper_lim;
+    lower_limit = lower_lim;
     direction = DIR_NONE;
     ufo_hit_ground = 0;
     shot_pos.x = -1;
@@ -78,7 +74,7 @@ void ufo_t::move(void)
             }
 
             /* no ufo or shot make a ufo */
-            pos.y = UFO_TOP + (rand() % (UFO_BOTTOM - UFO_TOP));
+            pos.y = upper_limit + (rand() % (lower_limit - upper_limit));
 
             if (rand() % 2)
             {
@@ -99,7 +95,7 @@ void ufo_t::move(void)
 
         case DIR_RIGHT:
             /* ufo is moving right */
-            if ((UFO_BOTTOM == pos.y) && (cols - 3 == pos.x))
+            if ((lower_limit == pos.y) && (cols - 3 == pos.x))
             {
                 /* we're at the bottom , done with this one */
                 mvwaddstr(win, pos.y, pos.x, "   ");
@@ -137,7 +133,7 @@ void ufo_t::move(void)
                 /* go up a row */
                 pos.y--;
 
-                if (UFO_TOP > pos.y)
+                if (upper_limit > pos.y)
                 {
                     /* we're at the top, done with this one */
                     pos.x = 0;

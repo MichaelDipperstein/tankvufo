@@ -391,11 +391,11 @@ bool tank_v_ufo_t::initialize_vehicles(sound_data_t *sound_data)
     bool result;
     result = false;
 
-    tank = new tank_t(v20_win, sound_data);
+    tank = new tank_t(v20_win, SCORE_ROW + 1, sound_data);
 
     if (nullptr != tank)
     {
-        ufo = new ufo_t(v20_win, sound_data);
+        ufo = new ufo_t(v20_win, UFO_TOP, UFO_BOTTOM, sound_data);
 
         if (nullptr != ufo)
         {

@@ -55,20 +55,13 @@ typedef struct
     int8_t y;
 } pos_t;
 
-/* constants defined in tankvufo.c */
-
-/* score is written to this row */
-extern const int SCORE_ROW;
+/* constants defined in tankvufo.cpp */
 
 /* rows containing tank animation */
 extern const int TANK_TREAD_ROW;
 extern const int TANK_TURRET_ROW;
 extern const int TANK_GUN_ROW;
 extern const int TANK_SHOT_START_ROW;
-
-/* lowest and highest rows of ufo travel */
-extern const int UFO_BOTTOM;
-extern const int UFO_TOP;
 
 class tank_v_ufo_t
 {

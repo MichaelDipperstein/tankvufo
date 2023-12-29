@@ -39,12 +39,13 @@
 static const cchar_t TANK_SHOT_CHAR = {WA_NORMAL, L"▪", 0};
 static const cchar_t BOX_CHAR = {WA_NORMAL, L"█", 0};
 
-tank_t::tank_t(WINDOW *window, sound_data_t *sd)
+tank_t::tank_t(WINDOW *window, const int min_y, sound_data_t *sd)
 {
     /* start with tank on left and no shot */
     x = 0;
     shot_pos.x = -1;
     shot_pos.y = -1;
+    min_shot_y = min_y;
     shot_hit = false;
     on_fire = 0;
     number_died = 0;
@@ -177,7 +178,7 @@ void tank_t::move_shot(void)
             mvwaddch(win, shot_pos.y + 1, shot_pos.x, ' ');
         }
 
-        if (shot_pos.y != SCORE_ROW)
+        if (shot_pos.y >= min_shot_y)
         {
             /* draw new shot */
             mvwadd_wch(win, shot_pos.y, shot_pos.x, &TANK_SHOT_CHAR);
