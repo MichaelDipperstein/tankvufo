@@ -548,62 +548,27 @@ int tank_v_ufo_t::handle_keypress()
 
 void tank_v_ufo_t::check_tank_shot()
 {
-    int dx;
-    sound_error_t sound_error;
-    pos_t shot_pos;
-    pos_t ufo_pos;
+    bool just_hit;
 
-    shot_pos = tank->get_shot_pos();
-    ufo_pos = ufo->get_pos();
+    just_hit = tank->update_shot_hit(ufo->get_pos());
 
-    if (tank->did_shot_hit())
+    if (true == just_hit)
     {
-        /* clear explosion shot */
-        mvwaddch(v20_win, shot_pos.y - 1, shot_pos.x, ' ');
-        mvwaddstr(v20_win, shot_pos.y, shot_pos.x - 1, "   ");
-        mvwaddch(v20_win, shot_pos.y + 1, shot_pos.x, ' ');
-        wrefresh(v20_win);
+        /* just hit ufo */
+        sound_error_t sound_error;
 
-        tank->end_shot();
-        tank->set_shot_hit(false);
-        return;
+        sound_error = ufo->set_falling();
+
+        if (0 != sound_error)
+        {
+            handle_error(sound_error);
+        }
+
+        /* ufo shot magically disappears when ufo is hit */
+        ufo->clear_shot(true);
     }
-
-    if (shot_pos.y != ufo_pos.y)
-    {
-        /* different rows, no hit */
-        return;
-    }
-
-    dx = shot_pos.x - ufo_pos.x;
-
-    if ((dx < 0) || (dx > 2))
-    {
-        /* wide of ufo, no hit */
-        return;
-    }
-
-    /* hit */
-    tank->set_shot_hit(true);
-
-    wattron(v20_win, COLOR_PAIR(3));       /* fire color */
-    mvwaddstr(v20_win, shot_pos.y - 1, shot_pos.x, "█");
-    mvwaddstr(v20_win, shot_pos.y, shot_pos.x - 1, "███");
-    mvwaddstr(v20_win, shot_pos.y + 1, shot_pos.x, "█");
-    wattroff(v20_win, COLOR_PAIR(3));
-
-    sound_error = ufo->set_falling();
-
-    if (0 != sound_error)
-    {
-        handle_error(sound_error);
-    }
-
-    /* ufo shot magically disappears when UFO is hit */
-    ufo->clear_shot(true);
 
     wrefresh(v20_win);
-    return;
 }
 
 

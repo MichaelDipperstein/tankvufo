@@ -50,11 +50,9 @@ class tank_t
         /* tank shot movement and position */
         void move_shot(void);
         bool was_shot_fired(void) const;
-        pos_t get_shot_pos(void) const;
         void shoot(void);
         void end_shot(void);
-        bool did_shot_hit(void) const;
-        void set_shot_hit(const bool hit);
+        bool update_shot_hit(const pos_t ufo_pos);
 
         /* flaming status */
         bool is_on_fire(void) const;

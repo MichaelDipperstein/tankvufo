@@ -211,12 +211,6 @@ bool tank_t::was_shot_fired(void) const
 }
 
 
-pos_t tank_t::get_shot_pos(void) const
-{
-    return shot_pos;
-}
-
-
 void tank_t::shoot(void)
 {
     shot_pos.x = x + 3;
@@ -231,15 +225,44 @@ void tank_t::end_shot(void)
 }
 
 
-bool tank_t::did_shot_hit(void) const
+bool tank_t::update_shot_hit(const pos_t ufo_pos)
 {
-    return shot_hit;
-}
+    bool just_hit;
 
+    just_hit = false;
 
-void tank_t::set_shot_hit(const bool hit)
-{
-    shot_hit = hit;
+    if (true == shot_hit)
+    {
+        /* clear explosion shot */
+        mvwaddch(win, shot_pos.y - 1, shot_pos.x, ' ');
+        mvwaddstr(win, shot_pos.y, shot_pos.x - 1, "   ");
+        mvwaddch(win, shot_pos.y + 1, shot_pos.x, ' ');
+
+        end_shot();
+        shot_hit = false;
+    }
+    else if (shot_pos.y == ufo_pos.y)
+    {
+        /* same row */
+        int dx;
+
+        dx = shot_pos.x - ufo_pos.x;
+
+        if ((dx >= 0) && (dx <= 2))
+        {
+            /* hit */
+            shot_hit = true;
+            just_hit = true;
+
+            wattron(win, COLOR_PAIR(3));       /* fire color */
+            mvwaddstr(win, shot_pos.y - 1, shot_pos.x, "█");
+            mvwaddstr(win, shot_pos.y, shot_pos.x - 1, "███");
+            mvwaddstr(win, shot_pos.y + 1, shot_pos.x, "█");
+            wattroff(win, COLOR_PAIR(3));
+        }
+    }
+
+    return just_hit;
 }
 
 
