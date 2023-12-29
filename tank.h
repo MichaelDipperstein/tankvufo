@@ -51,7 +51,8 @@ class tank_t
         void move_shot(void);
         bool was_shot_fired(void) const;
         pos_t get_shot_pos(void) const;
-        void set_shot_pos(const int8_t x, const int8_t y);
+        void shoot(void);
+        void end_shot(void);
         bool did_shot_hit(void) const;
         void set_shot_hit(const bool hit);
 

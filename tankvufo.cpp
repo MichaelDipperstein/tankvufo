@@ -325,6 +325,8 @@ bool tank_v_ufo_t::make_v20_win(int rows, int cols, int begin_x, int begin_y)
 
 void tank_v_ufo_t::draw_ground(void)
 {
+    static cchar_t GROUND_CHAR = {WA_NORMAL, L"▔", 0};
+
     mvwhline_set(v20_win, v20_rows - 1, 0, &GROUND_CHAR, v20_cols);
 }
 
@@ -367,6 +369,7 @@ void tank_v_ufo_t::draw_volume_level_box(void)
 
 void tank_v_ufo_t::show_volume_level(const float volume)
 {
+    static cchar_t BOX_CHAR = {WA_NORMAL, L"█", 0};
     int bars;
     int start_y;
 
@@ -421,13 +424,10 @@ void tank_v_ufo_t::move_ufo(void)
 
 void tank_v_ufo_t::update_tank_shot(void)
 {
-    if (!tank->did_shot_hit())
-    {
-        tank->move_shot();
-    }
-
     if (tank->was_shot_fired())
     {
+        tank->move_shot();
+
         /* check for ufo hit */
         check_tank_shot();
     }
@@ -509,8 +509,7 @@ int tank_v_ufo_t::handle_keypress()
                     sound_data_t *sound_data;
 
                     /* there isn't a shot, so take it */
-                    tank->set_shot_pos(tank->get_pos() + 3,
-                        TANK_SHOT_START_ROW);
+                    tank->shoot();
 
                     /* play sound */
                     sound_data = tank->get_sound_data();
@@ -565,7 +564,7 @@ void tank_v_ufo_t::check_tank_shot()
         mvwaddch(v20_win, shot_pos.y + 1, shot_pos.x, ' ');
         wrefresh(v20_win);
 
-        tank->set_shot_pos(-1, -1);
+        tank->end_shot();
         tank->set_shot_hit(false);
         return;
     }
@@ -588,9 +587,9 @@ void tank_v_ufo_t::check_tank_shot()
     tank->set_shot_hit(true);
 
     wattron(v20_win, COLOR_PAIR(3));       /* fire color */
-    mvwadd_wch(v20_win, shot_pos.y - 1, shot_pos.x, &BOX_CHAR);
+    mvwaddstr(v20_win, shot_pos.y - 1, shot_pos.x, "█");
     mvwaddstr(v20_win, shot_pos.y, shot_pos.x - 1, "███");
-    mvwadd_wch(v20_win, shot_pos.y + 1, shot_pos.x, &BOX_CHAR);
+    mvwaddstr(v20_win, shot_pos.y + 1, shot_pos.x, "█");
     wattroff(v20_win, COLOR_PAIR(3));
 
     sound_error = ufo->set_falling();

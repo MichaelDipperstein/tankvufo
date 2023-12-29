@@ -103,10 +103,6 @@ class tank_v_ufo_t
         tank_t *tank;
         ufo_t *ufo;
 
-        /* cchar_t for unicode charaters used in this file */
-        constexpr static cchar_t GROUND_CHAR = {WA_NORMAL, L"▔", 0};
-        constexpr static cchar_t BOX_CHAR = {WA_NORMAL, L"█", 0};
-
         void check_tank_shot(void);
         void check_ufo_shot(void);
 };

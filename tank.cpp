@@ -43,8 +43,7 @@ tank_t::tank_t(WINDOW *window, const int min_y, sound_data_t *sd)
 {
     /* start with tank on left and no shot */
     x = 0;
-    shot_pos.x = -1;
-    shot_pos.y = -1;
+    end_shot();
     min_shot_y = min_y;
     shot_hit = false;
     on_fire = 0;
@@ -218,10 +217,17 @@ pos_t tank_t::get_shot_pos(void) const
 }
 
 
-void tank_t::set_shot_pos(const int8_t x, const int8_t y)
+void tank_t::shoot(void)
 {
-    shot_pos.x = x;
-    shot_pos.y = y;
+    shot_pos.x = x + 3;
+    shot_pos.y = TANK_SHOT_START_ROW;
+}
+
+
+void tank_t::end_shot(void)
+{
+    shot_pos.x = -1;
+    shot_pos.y = -1;
 }
 
 
