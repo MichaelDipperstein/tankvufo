@@ -33,39 +33,44 @@
 #ifndef  __UFO_H
 #define  __UFO_H
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
 #include "tankvufo.h"
 #include "sounds.h"
 
-/* struct containing ufo related data */
-typedef struct ufo_info_t ufo_info_t;
+class ufo_t
+{
+    public:
+        ufo_t(WINDOW *window, sound_data_t *sd);
 
+        /* ufo shot movement and information */
+        void ufo_move(void);
+        pos_t ufo_get_pos(void) const;
+        uint8_t ufo_get_tank_score(void) const;
 
-ufo_info_t *ufo_initialize(WINDOW *window, sound_data_t *sound_data);
+        /* start falling direction and sound */
+        sound_error_t ufo_set_falling(void);
 
-/* ufo shot movement and information */
-void ufo_move(ufo_info_t *ufo);
-pos_t ufo_get_pos(const ufo_info_t *ufo);
-uint8_t ufo_get_tank_score(const ufo_info_t *ufo);
+        /* ufo shot movement and information */
+        void ufo_move_shot(void);
+        pos_t ufo_get_shot_pos(void) const;
+        void ufo_clear_shot(bool erase);
+        bool ufo_shot_is_falling(void) const;
+        bool ufo_shot_is_exploding(void) const;
+        int ufo_shot_hit_ground(void);
 
-/* start falling direction and sound */
-sound_error_t ufo_set_falling(ufo_info_t *ufo);
+    private:
+        pos_t pos;                  /* column and row containing the ufo */
+        direction_t direction;      /* direction that the UFO is moving */
+        uint8_t ufo_hit_ground;     /* 0 when not on fire, otherwise flame count */
+        pos_t shot_pos;             /* x and y coordinate of ufo shot */
+        direction_t shot_direction; /* direction the ufo shot is moving */
+        uint8_t shot_hit_ground;    /* 0 if false, otherwise phase of explosion */
+        uint8_t number_died;        /* number of ufos that died (tank score) */
+        WINDOW *win;                /* ncurses window for the ufo and its shot */
+        int rows;                   /* window rows */
+        int cols;                   /* window columns */
+        sound_data_t *sound_data;
 
-/* ufo shot movement and information */
-void ufo_shot_decision(ufo_info_t *ufo);
-void ufo_move_shot(ufo_info_t *ufo);
-pos_t ufo_get_shot_pos(const ufo_info_t *ufo);
-void ufo_clear_shot(ufo_info_t *ufo, bool erase);
-bool ufo_shot_is_falling(const ufo_info_t *ufo);
-bool ufo_shot_is_exploding(const ufo_info_t *ufo);
-int ufo_shot_hit_ground(ufo_info_t *ufo);
-
-#ifdef __cplusplus
-}
-#endif
+        void ufo_shot_decision(void);
+};
 
 #endif /* ndef  __UFO_H */

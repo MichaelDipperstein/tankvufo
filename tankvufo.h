@@ -35,7 +35,7 @@
 
 /* forward declarations */
 class tank_t;
-typedef struct ufo_info_t ufo_info_t;
+class ufo_t;
 typedef struct sound_data_t sound_data_t;
 
 /* movement directions used by tank, ufo, and ufo shots */
@@ -108,7 +108,7 @@ class tank_v_ufo_t
         int vol_cols;
 
         tank_t *tank;
-        ufo_info_t *ufo;
+        ufo_t *ufo;
 
         /* cchar_t for unicode charaters used in this file */
         constexpr static cchar_t GROUND_CHAR = {WA_NORMAL, L"▔", 0};

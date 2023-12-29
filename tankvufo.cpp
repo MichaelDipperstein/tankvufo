@@ -272,7 +272,7 @@ tank_v_ufo_t::~tank_v_ufo_t(void)
 
     if (ufo != nullptr)
     {
-        free(ufo);
+        delete ufo;
     }
 }
 
@@ -280,7 +280,7 @@ tank_v_ufo_t::~tank_v_ufo_t(void)
 void tank_v_ufo_t::print_score()
 {
     mvwprintw(v20_win, SCORE_ROW, 5, "%d", tank->get_tanks_killed());
-    mvwprintw(v20_win, SCORE_ROW, 15, "%d", ufo_get_tank_score(ufo));
+    mvwprintw(v20_win, SCORE_ROW, 15, "%d", ufo->ufo_get_tank_score());
     wrefresh(v20_win);
 }
 
@@ -395,7 +395,7 @@ bool tank_v_ufo_t::initialize_vehicles(sound_data_t *sound_data)
 
     if (nullptr != tank)
     {
-        ufo = ufo_initialize(v20_win, sound_data);
+        ufo = new ufo_t(v20_win, sound_data);
 
         if (nullptr != ufo)
         {
@@ -415,7 +415,7 @@ void tank_v_ufo_t::move_tank(void)
 
 void tank_v_ufo_t::move_ufo(void)
 {
-    ufo_move(ufo);
+    ufo->ufo_move();
 }
 
 
@@ -437,14 +437,14 @@ void tank_v_ufo_t::update_tank_shot(void)
 void tank_v_ufo_t::update_ufo_shot(void)
 {
     /* move ufo shot if need (shot exists and isn't exploding) */
-    ufo_move_shot(ufo);
+    ufo->ufo_move_shot();
 
-    if (ufo_shot_is_exploding(ufo))
+    if (ufo->ufo_shot_is_exploding())
     {
         int clean_up;
 
         /* shot is exploding on the ground, animate it */
-        clean_up = ufo_shot_hit_ground(ufo);
+        clean_up = ufo->ufo_shot_hit_ground();
 
         if (clean_up)
         {
@@ -453,7 +453,7 @@ void tank_v_ufo_t::update_ufo_shot(void)
             move_tank();
         }
     }
-    else if (ufo_shot_is_falling(ufo))
+    else if (ufo->ufo_shot_is_falling())
     {
         /* check for tank hit */
         check_ufo_shot();
@@ -555,7 +555,7 @@ void tank_v_ufo_t::check_tank_shot()
     pos_t ufo_pos;
 
     shot_pos = tank->get_shot_pos();
-    ufo_pos = ufo_get_pos(ufo);
+    ufo_pos = ufo->ufo_get_pos();
 
     if (tank->did_shot_hit())
     {
@@ -593,7 +593,7 @@ void tank_v_ufo_t::check_tank_shot()
     mvwadd_wch(v20_win, shot_pos.y + 1, shot_pos.x, &BOX_CHAR);
     wattroff(v20_win, COLOR_PAIR(3));
 
-    sound_error = ufo_set_falling(ufo);
+    sound_error = ufo->ufo_set_falling();
 
     if (0 != sound_error)
     {
@@ -601,7 +601,7 @@ void tank_v_ufo_t::check_tank_shot()
     }
 
     /* ufo shot magically disappears when UFO is hit */
-    ufo_clear_shot(ufo, true);
+    ufo->ufo_clear_shot(true);
 
     wrefresh(v20_win);
     return;
@@ -614,7 +614,7 @@ void tank_v_ufo_t::check_ufo_shot()
     bool hit;
     pos_t shot_pos;
 
-    shot_pos = ufo_get_shot_pos(ufo);
+    shot_pos = ufo->ufo_get_shot_pos();
 
     if (shot_pos.y < TANK_GUN_ROW)
     {
@@ -668,6 +668,6 @@ void tank_v_ufo_t::check_ufo_shot()
             handle_error(sound_error);
         }
 
-        ufo_clear_shot(ufo, false);
+        ufo->ufo_clear_shot(false);
     }
 }
