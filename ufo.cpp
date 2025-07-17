@@ -176,7 +176,7 @@ void ufo_t::move(void)
                 mvwaddstr(win, pos.y, pos.x, "<*>");
             }
 
-            if (TANK_TREAD_ROW == pos.y)
+            if (RowsAndCols::TANK_TREAD_ROW == pos.y)
             {
                 /* we're at the bottom, done with this one */
                 direction = DIR_LANDED;
@@ -208,7 +208,7 @@ void ufo_t::move(void)
                 mvwaddstr(win, pos.y, pos.x, "<*>");
             }
 
-            if (TANK_TREAD_ROW == pos.y)
+            if (RowsAndCols::TANK_TREAD_ROW == pos.y)
             {
                 /* we're at the bottom, done with this one */
                 direction = DIR_LANDED;
@@ -367,7 +367,7 @@ void ufo_t::move_shot(void)
         mvwaddch(win, shot_pos.y, shot_pos.x, ' ');
     }
 
-    if (TANK_TREAD_ROW == shot_pos.y)
+    if (RowsAndCols::TANK_TREAD_ROW == shot_pos.y)
     {
         /* done with shot */
         shot_direction = DIR_NONE;
@@ -449,28 +449,28 @@ int ufo_t::update_shot_phase(void)
         case 1:
             /* just lines */
             shot_hit_ground++;
-            mvwaddstr(win, TANK_TREAD_ROW, shot_x - 2, "╲ │ ╱");
+            mvwaddstr(win, RowsAndCols::TANK_TREAD_ROW, shot_x - 2, "╲ │ ╱");
             break;
 
         case 2:
             /* full explosion */
             shot_hit_ground++;
-            mvwaddstr(win, TANK_TURRET_ROW, shot_x - 3, "•• • ••");
-            mvwaddstr(win, TANK_TREAD_ROW, shot_x - 2, "╲ │ ╱");
+            mvwaddstr(win, RowsAndCols::TANK_TURRET_ROW, shot_x - 3, "•• • ••");
+            mvwaddstr(win, RowsAndCols::TANK_TREAD_ROW, shot_x - 2, "╲ │ ╱");
             break;
 
         case 3:
             /* dots */
             shot_hit_ground++;
-            mvwaddstr(win, TANK_TURRET_ROW, shot_x - 3, "•• • ••");
-            mvwaddstr(win, TANK_TREAD_ROW, shot_x - 2, "     ");
+            mvwaddstr(win, RowsAndCols::TANK_TURRET_ROW, shot_x - 3, "•• • ••");
+            mvwaddstr(win, RowsAndCols::TANK_TREAD_ROW, shot_x - 2, "     ");
             break;
 
         case 4:
             /* clean-up */
             shot_hit_ground = 0;
-            mvwaddstr(win, TANK_TURRET_ROW, shot_x - 3, "       ");
-            mvwaddstr(win, TANK_TREAD_ROW, shot_x - 2, "     ");
+            mvwaddstr(win, RowsAndCols::TANK_TURRET_ROW, shot_x - 3, "       ");
+            mvwaddstr(win, RowsAndCols::TANK_TREAD_ROW, shot_x - 2, "     ");
             shot_pos.x = -1;
             shot_pos.y = -1;
             shot_direction = DIR_NONE;

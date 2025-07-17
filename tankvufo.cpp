@@ -46,28 +46,7 @@
 #include "ufo.h"
 #include "sounds.h"
 
-/* vic-20 screen dimensions */
-constexpr int V20_COLS = 22;
-constexpr int V20_ROWS = 23;
-
-/* score is written to this row */
-constexpr int SCORE_ROW = 2;
-
-/* rows containing tank animation */
-constexpr int TANK_TREAD_ROW = V20_ROWS - 2;
-constexpr int TANK_TURRET_ROW = TANK_TREAD_ROW - 1;
-constexpr int TANK_GUN_ROW = TANK_TURRET_ROW - 1;
-constexpr int TANK_SHOT_START_ROW = TANK_GUN_ROW - 1;
-
-/* lowest and highest rows of ufo travel */
-constexpr int UFO_BOTTOM = TANK_SHOT_START_ROW - 2;
-constexpr int UFO_TOP = SCORE_ROW + 2;
-
-/* volume control window dimensions and positions */
-static constexpr int VOL_COLS = 10;
-static constexpr int VOL_ROWS = 13;
-
-static constexpr float VOLUME = 0.5;    /* base volume for sounds */
+constexpr float VOLUME = 0.5;    /* base volume for sounds */
 
 int main(void)
 {
@@ -85,10 +64,11 @@ int main(void)
     }
 
     /* vic-20 sized window for the game field */
-    win_x = (COLS - V20_COLS) / 2;
-    win_y = (LINES - V20_ROWS) / 2;
+    win_x = (COLS - RowsAndCols::V20_COLS) / 2;
+    win_y = (LINES - RowsAndCols::V20_ROWS) / 2;
 
-    result = tvu->MakeV20Win(V20_ROWS, V20_COLS, win_y, win_x);
+    result = tvu->MakeV20Win(RowsAndCols::V20_ROWS,
+        RowsAndCols::V20_COLS, win_y, win_x);
 
     if (false == result)
     {
@@ -98,9 +78,10 @@ int main(void)
     }
 
     /* window for volume meter */
-    win_y = (LINES - VOL_ROWS) / 2;
-    win_x += V20_COLS + VOL_COLS;
-    result = tvu->MakeVolWin(VOL_ROWS, VOL_COLS, win_y, win_x);
+    win_y = (LINES - RowsAndCols::VOL_ROWS) / 2;
+    win_x += RowsAndCols::V20_COLS + RowsAndCols::VOL_COLS;
+    result = tvu->MakeVolWin(RowsAndCols::VOL_ROWS, RowsAndCols::VOL_COLS,
+        win_y, win_x);
 
     if (false == result)
     {
@@ -279,8 +260,8 @@ TankVUfo::~TankVUfo(void)
 
 void TankVUfo::PrintScore()
 {
-    mvwprintw(v20Win, SCORE_ROW, 5, "%d", tank->get_tanks_killed());
-    mvwprintw(v20Win, SCORE_ROW, 15, "%d", ufo->get_ufos_killed());
+    mvwprintw(v20Win, RowsAndCols::SCORE_ROW, 5, "%d", tank->get_tanks_killed());
+    mvwprintw(v20Win, RowsAndCols::SCORE_ROW, 15, "%d", ufo->get_ufos_killed());
     Refresh();
 }
 
@@ -394,11 +375,12 @@ bool TankVUfo::InitializeVehicles(sound_data_t *sound_data)
     bool result;
     result = false;
 
-    tank = new tank_t(v20Win, SCORE_ROW + 1, sound_data);
+    tank = new tank_t(v20Win, RowsAndCols::SCORE_ROW + 1, sound_data);
 
     if (nullptr != tank)
     {
-        ufo = new ufo_t(v20Win, UFO_TOP, UFO_BOTTOM, sound_data);
+        ufo = new ufo_t(v20Win, RowsAndCols::UFO_TOP, RowsAndCols::UFO_BOTTOM,
+            sound_data);
 
         if (nullptr != ufo)
         {
@@ -580,7 +562,7 @@ void TankVUfo::CheckUfoShot()
 
     shot_pos = ufo->get_shot_pos();
 
-    if (shot_pos.y < TANK_GUN_ROW)
+    if (shot_pos.y < RowsAndCols::TANK_GUN_ROW)
     {
         /* shot is above the tank */
         return;
@@ -590,7 +572,7 @@ void TankVUfo::CheckUfoShot()
     hit = false;
 
     /* check for hit by row */
-    if (TANK_GUN_ROW == shot_pos.y)
+    if (RowsAndCols::TANK_GUN_ROW == shot_pos.y)
     {
         /* gun barrel row */
         if (3 == dx)
@@ -598,7 +580,7 @@ void TankVUfo::CheckUfoShot()
             hit = true;
         }
     }
-    else if (TANK_TURRET_ROW == shot_pos.y)
+    else if (RowsAndCols::TANK_TURRET_ROW == shot_pos.y)
     {
         /* turret row */
         if ((2 == dx) || (3 == dx))
@@ -606,7 +588,7 @@ void TankVUfo::CheckUfoShot()
             hit = true;
         }
     }
-    else if (TANK_TREAD_ROW == shot_pos.y)
+    else if (RowsAndCols::TANK_TREAD_ROW == shot_pos.y)
     {
         /* tread row */
         if ((dx > 0) && (dx < 5))

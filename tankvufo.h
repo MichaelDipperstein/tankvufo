@@ -55,13 +55,29 @@ typedef struct
     int8_t y;
 } pos_t;
 
-/* constants defined in tankvufo.cpp */
+namespace RowsAndCols
+{
+    /* vic-20 screen dimensions */
+    constexpr int V20_COLS = 22;
+    constexpr int V20_ROWS = 23;
 
-/* rows containing tank animation */
-extern const int TANK_TREAD_ROW;
-extern const int TANK_TURRET_ROW;
-extern const int TANK_GUN_ROW;
-extern const int TANK_SHOT_START_ROW;
+    /* score is written to this row */
+    constexpr int SCORE_ROW = 2;
+
+    /* rows containing tank animation */
+    constexpr int TANK_TREAD_ROW = V20_ROWS - 2;
+    constexpr int TANK_TURRET_ROW = TANK_TREAD_ROW - 1;
+    constexpr int TANK_GUN_ROW = TANK_TURRET_ROW - 1;
+    constexpr int TANK_SHOT_START_ROW = TANK_GUN_ROW - 1;
+
+    /* lowest and highest rows of ufo travel */
+    constexpr int UFO_BOTTOM = TANK_SHOT_START_ROW - 2;
+    constexpr int UFO_TOP = SCORE_ROW + 2;
+
+    /* volume control window dimensions and positions */
+    constexpr int VOL_COLS = 10;
+    constexpr int VOL_ROWS = 13;
+}
 
 class TankVUfo
 {
