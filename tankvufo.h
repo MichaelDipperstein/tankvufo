@@ -16,14 +16,14 @@
 *
 * This file is part of Tank Versus UFO.
 *
-* Trim is free software; you can redistribute it and/or modify it under
-* the terms of the GNU General Public License as published by the Free
-* Software Foundation; either version 3 of the License, or (at your
+* Tank Versus UFO is free software; you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by the
+* Free Software Foundation; either version 3 of the License, or (at your
 * option) any later version.
 *
-* Trim is distributed in the hope that it will be useful, but WITHOUT ANY
-* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-* FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+* Tank Versus UFO is distributed in the hope that it will be fun, but
+* WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+* or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 * for more details.
 *
 * You should have received a copy of the GNU General Public License along
@@ -63,48 +63,48 @@ extern const int TANK_TURRET_ROW;
 extern const int TANK_GUN_ROW;
 extern const int TANK_SHOT_START_ROW;
 
-class tank_v_ufo_t
+class TankVUfo
 {
     public:
-        tank_v_ufo_t(void);
-        ~tank_v_ufo_t(void);
+        TankVUfo(void);
+        ~TankVUfo(void);
 
         /* vic-20 window methods */
-        bool make_v20_win(int rows, int cols, int begin_x, int begin_y);
-        void initialize_v20_win(void);
-        void print_score(void);
-        void draw_ground(void);
+        bool MakeV20Win(int rows, int cols, int begin_x, int begin_y);
+        void InitializeV20Win(void);
+        void PrintScore(void);
+        void DrawGround(void);
 
         /* volume window methods */
-        bool make_vol_win(int rows, int cols, int begin_x, int begin_y);
-        void draw_volume_level_box(void);
-        void show_volume_level(const float volume);
+        bool MakeVolWin(int rows, int cols, int begin_x, int begin_y);
+        void DrawVolumeLevelBox(void);
+        void ShowVolumeLevel(const float volume);
 
-        bool initialize_vehicles(sound_data_t *sound_data);
+        bool InitializeVehicles(sound_data_t *sound_data);
 
         /* move and update objects */
-        void move_tank(void);
-        void move_ufo(void);
-        void update_tank_shot(void);
-        void update_ufo_shot(void);
+        void MoveTank(void);
+        void MoveUfo(void);
+        void UpdateTankShot(void);
+        void UpdateUfoShot(void);
 
-        int handle_keypress(void);
-        void refresh(void) { wrefresh(v20_win); }
+        int HandleKeyPress(void);
+        void Refresh(void) { wrefresh(v20Win); }
 
     private:
-        WINDOW *v20_win;
-        int v20_rows;
-        int v20_cols;
+        WINDOW *v20Win;
+        int v20Rows;
+        int v20Cols;
 
-        WINDOW *vol_win;
-        int vol_rows;
-        int vol_cols;
+        WINDOW *volWin;
+        int volRows;
+        int volCols;
 
         tank_t *tank;
         ufo_t *ufo;
 
-        void check_tank_shot(void);
-        void check_ufo_shot(void);
+        void CheckTankShot(void);
+        void CheckUfoShot(void);
 };
 
 #endif /* ndef  __TANKVUFO_H */
