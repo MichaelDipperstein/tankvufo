@@ -47,7 +47,7 @@ constexpr float VOLUME = 0.5;    /* base volume for sounds */
 int main(void)
 {
     TankVUfo *tvu;
-    int win_x, win_y;
+    int winX, winY;
     bool result;
 
     /* setup the ncurses field-of-play */
@@ -60,11 +60,11 @@ int main(void)
     }
 
     /* vic-20 sized window for the game field */
-    win_x = (COLS - Tvu::V20_COLS) / 2;
-    win_y = (LINES - Tvu::V20_ROWS) / 2;
+    winX = (COLS - Tvu::V20_COLS) / 2;
+    winY = (LINES - Tvu::V20_ROWS) / 2;
 
     result = tvu->MakeV20Win(Tvu::V20_ROWS,
-        Tvu::V20_COLS, win_y, win_x);
+        Tvu::V20_COLS, winY, winX);
 
     if (false == result)
     {
@@ -74,10 +74,10 @@ int main(void)
     }
 
     /* window for volume meter */
-    win_y = (LINES - Tvu::VOL_ROWS) / 2;
-    win_x += Tvu::V20_COLS + Tvu::VOL_COLS;
+    winY = (LINES - Tvu::VOL_ROWS) / 2;
+    winX += Tvu::V20_COLS + Tvu::VOL_COLS;
     result = tvu->MakeVolWin(Tvu::VOL_ROWS, Tvu::VOL_COLS,
-        win_y, win_x);
+        winY, winX);
 
     if (false == result)
     {
@@ -86,7 +86,7 @@ int main(void)
         return 1;
     }
 
-    refresh();              /* Refresh the whole screen to show the windows */
+    refresh();      /* Refresh the whole screen to show the windows */
 
     tvu->InitializeV20Win();
 
@@ -95,33 +95,33 @@ int main(void)
     tvu->ShowVolumeLevel(VOLUME);
 
     /* initialize all of the sound stuff */
-    sound_data_t sound_data;
-    sound_error_t sound_error;
+    sound_data_t soundData;
+    sound_error_t soundError;
 
-    sound_error = initialize_sounds();
+    soundError = initialize_sounds();
 
-    if (0 != sound_error)
+    if (0 != soundError)
     {
-        handle_error(sound_error);
+        handle_error(soundError);
         delete tvu;
-        return sound_error;
+        return soundError;
     }
 
-    sound_error = create_sound_stream(&sound_data, VOLUME);
+    soundError = create_sound_stream(&soundData, VOLUME);
 
-    if (0 != sound_error)
+    if (0 != soundError)
     {
-        handle_error(sound_error);
+        handle_error(soundError);
         delete tvu;
-        return sound_error;
+        return soundError;
     }
 
     /* create and initialize the tank and ufo */
-    result = tvu->InitializeVehicles(&sound_data);
+    result = tvu->InitializeVehicles(&soundData);
 
     if (false == result)
     {
-        close_sound_stream(&sound_data);
+        close_sound_stream(&soundData);
         end_sounds();
         delete tvu;
         perror("allocating tank or ufo");
@@ -132,16 +132,16 @@ int main(void)
     tvu->Refresh();
 
     /* timer and poll variables */
-    int tfd;
+    int fdTimer;
     struct itimerspec timeout;
-    struct pollfd pfd;
+    struct pollfd fdPoll;
 
     /* create a timer fd that expires every 200ms */
-    tfd = timerfd_create(CLOCK_MONOTONIC,0);
+    fdTimer = timerfd_create(CLOCK_MONOTONIC,0);
 
-    if (tfd <= 0)
+    if (fdTimer <= 0)
     {
-        close_sound_stream(&sound_data);
+        close_sound_stream(&soundData);
         end_sounds();
         delete tvu;
         perror("creating timerfd");
@@ -154,9 +154,9 @@ int main(void)
     timeout.it_interval.tv_sec = 0;
     timeout.it_interval.tv_nsec = 200 * 1000000;
 
-    if (timerfd_settime(tfd, 0, &timeout, 0) != 0)
+    if (timerfd_settime(fdTimer, 0, &timeout, 0) != 0)
     {
-        close_sound_stream(&sound_data);
+        close_sound_stream(&soundData);
         end_sounds();
         delete tvu;
         perror("setting timerfd");
@@ -164,10 +164,10 @@ int main(void)
     }
 
     /* set pollfd for timer read event */
-    memset(&pfd, 0, sizeof(pfd));
-    pfd.fd = tfd;
-    pfd.events = POLLIN;
-    pfd.revents = 0;
+    memset(&fdPoll, 0, sizeof(fdPoll));
+    fdPoll.fd = fdTimer;
+    fdPoll.events = POLLIN;
+    fdPoll.revents = 0;
 
     /*
      * This is the event loop that makes the game work.
@@ -175,14 +175,14 @@ int main(void)
      * If HandleKeyPress sees a 'q' or a 'Q' the loop will be
      * exited causing the game to end.
      */
-    while (poll(&pfd, 1, -1) > 0)
+    while (poll(&fdPoll, 1, -1) > 0)
     {
-        if (POLLIN == pfd.revents)
+        if (POLLIN == fdPoll.revents)
         {
             /* read the timer fd */
             uint64_t elapsed;
 
-            read(tfd, &elapsed, sizeof(elapsed));
+            read(fdTimer, &elapsed, sizeof(elapsed));
         }
         else
         {
@@ -205,7 +205,7 @@ int main(void)
         tvu->PrintScore();
     }
 
-    close_sound_stream(&sound_data);
+    close_sound_stream(&soundData);
     end_sounds();
     delete tvu;
     return 0;

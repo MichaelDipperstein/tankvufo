@@ -176,10 +176,10 @@ void TankVUfo::ShowVolumeLevel(const float volume)
 {
     static cchar_t BOX_CHAR = {WA_NORMAL, L"█", 0};
     int bars;
-    int start_y;
+    int startY;
 
     bars = (int)(volume * 10.0 + 0.5);
-    start_y = (volRows - 2) - bars;
+    startY = (volRows - 2) - bars;
 
     /* erase old bar */
     mvwvline(volWin, volRows - 2 - 10, 4, ' ', 10);
@@ -187,8 +187,8 @@ void TankVUfo::ShowVolumeLevel(const float volume)
 
     /* draw new bar in color pair 3 color (same as fire) */
     wattron(volWin, COLOR_PAIR(3));
-    mvwvline_set(volWin, start_y, 4, &BOX_CHAR, bars);
-    mvwvline_set(volWin, start_y, 5, &BOX_CHAR, bars);
+    mvwvline_set(volWin, startY, 4, &BOX_CHAR, bars);
+    mvwvline_set(volWin, startY, 5, &BOX_CHAR, bars);
     wattron(volWin, COLOR_PAIR(3));
     wrefresh(volWin);
 }
@@ -354,11 +354,11 @@ int TankVUfo::HandleKeyPress()
 
 void TankVUfo::CheckTankShot()
 {
-    bool just_hit;
+    bool justHit;
 
-    just_hit = tank->update_shot_hit(ufo->get_pos());
+    justHit = tank->update_shot_hit(ufo->get_pos());
 
-    if (true == just_hit)
+    if (true == justHit)
     {
         /* just hit ufo */
         sound_error_t sound_error;
@@ -382,21 +382,21 @@ void TankVUfo::CheckUfoShot()
 {
     int dx;
     bool hit;
-    Tvu::Pos shot_pos;
+    Tvu::Pos shotPos;
 
-    shot_pos = ufo->get_shot_pos();
+    shotPos = ufo->get_shot_pos();
 
-    if (shot_pos.y < Tvu::TANK_GUN_ROW)
+    if (shotPos.y < Tvu::TANK_GUN_ROW)
     {
         /* shot is above the tank */
         return;
     }
 
-    dx = shot_pos.x - tank->get_pos();
+    dx = shotPos.x - tank->get_pos();
     hit = false;
 
     /* check for hit by row */
-    if (Tvu::TANK_GUN_ROW == shot_pos.y)
+    if (Tvu::TANK_GUN_ROW == shotPos.y)
     {
         /* gun barrel row */
         if (3 == dx)
@@ -404,7 +404,7 @@ void TankVUfo::CheckUfoShot()
             hit = true;
         }
     }
-    else if (Tvu::TANK_TURRET_ROW == shot_pos.y)
+    else if (Tvu::TANK_TURRET_ROW == shotPos.y)
     {
         /* turret row */
         if ((2 == dx) || (3 == dx))
@@ -412,7 +412,7 @@ void TankVUfo::CheckUfoShot()
             hit = true;
         }
     }
-    else if (Tvu::TANK_TREAD_ROW == shot_pos.y)
+    else if (Tvu::TANK_TREAD_ROW == shotPos.y)
     {
         /* tread row */
         if ((dx > 0) && (dx < 5))
