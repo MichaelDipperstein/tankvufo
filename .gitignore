@@ -1,4 +1,5 @@
 tankvufo
+main.o
 tankvufo.o
 sounds.o
 tank.o

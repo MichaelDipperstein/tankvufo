@@ -12,8 +12,11 @@ SD_FILES = sound_data.h sound_data/on_fire.h sound_data/tank_shot.h \
 
 all:	tankvufo
 
-tankvufo:	tankvufo.o tank.o ufo.o sounds.o
+tankvufo:	main.o tankvufo.o tank.o ufo.o sounds.o
 		$(LD) $^ $(LDFLAGS) -o $@
+
+main.o:	main.cpp sounds.h tankvufo.h tank.h ufo.h
+		$(CPP) $(CFLAGS) -c $< -o $@
 
 tankvufo.o:	tankvufo.cpp sounds.h tankvufo.h tank.h ufo.h
 		$(CPP) $(CFLAGS) -c $< -o $@
@@ -28,5 +31,5 @@ sounds.o:	sounds.c sounds.h $(SD_FILES)
 		$(CPP) -c $< -Wall -Wextra `pkg-config portaudio-2.0 --cflags` -o $@
 
 clean:
-		rm -f tankvufo.o tank.o ufo.o sounds.o
+		rm -f main.o tankvufo.o tank.o ufo.o sounds.o
 		rm -f tankvufo
