@@ -33,51 +33,7 @@
 #ifndef  __TANKVUFO_H
 #define  __TANKVUFO_H
 
-/* forward declarations */
-class tank_t;
-class ufo_t;
-typedef struct sound_data_t sound_data_t;
-
-/* movement directions used by tank, ufo, and ufo shots */
-typedef enum
-{
-    DIR_NONE,
-    DIR_LEFT,
-    DIR_RIGHT,
-    DIR_FALLING_LEFT,
-    DIR_FALLING_RIGHT,
-    DIR_LANDED
-} direction_t;
-
-typedef struct
-{
-    int8_t x;
-    int8_t y;
-} pos_t;
-
-namespace RowsAndCols
-{
-    /* vic-20 screen dimensions */
-    constexpr int V20_COLS = 22;
-    constexpr int V20_ROWS = 23;
-
-    /* score is written to this row */
-    constexpr int SCORE_ROW = 2;
-
-    /* rows containing tank animation */
-    constexpr int TANK_TREAD_ROW = V20_ROWS - 2;
-    constexpr int TANK_TURRET_ROW = TANK_TREAD_ROW - 1;
-    constexpr int TANK_GUN_ROW = TANK_TURRET_ROW - 1;
-    constexpr int TANK_SHOT_START_ROW = TANK_GUN_ROW - 1;
-
-    /* lowest and highest rows of ufo travel */
-    constexpr int UFO_BOTTOM = TANK_SHOT_START_ROW - 2;
-    constexpr int UFO_TOP = SCORE_ROW + 2;
-
-    /* volume control window dimensions and positions */
-    constexpr int VOL_COLS = 10;
-    constexpr int VOL_ROWS = 13;
-}
+#include "tvu_defs.h"
 
 class TankVUfo
 {

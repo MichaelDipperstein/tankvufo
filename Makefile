@@ -15,16 +15,16 @@ all:	tankvufo
 tankvufo:	main.o tankvufo.o tank.o ufo.o sounds.o
 		$(LD) $^ $(LDFLAGS) -o $@
 
-main.o:	main.cpp sounds.h tankvufo.h tank.h ufo.h
+main.o:	main.cpp sounds.h tvu_defs.h
 		$(CPP) $(CFLAGS) -c $< -o $@
 
 tankvufo.o:	tankvufo.cpp sounds.h tankvufo.h tank.h ufo.h
 		$(CPP) $(CFLAGS) -c $< -o $@
 
-tank.o:	tank.cpp tank.h sounds.h tankvufo.h
+tank.o:	tank.cpp tank.h sounds.h tvu_defs.h
 		$(CPP) $(CFLAGS) -c $< -o $@
 
-ufo.o:	ufo.cpp ufo.h sounds.h tankvufo.h
+ufo.o:	ufo.cpp ufo.h sounds.h tvu_defs.h
 		$(CPP) $(CFLAGS) -c $< -o $@
 
 sounds.o:	sounds.c sounds.h $(SD_FILES)

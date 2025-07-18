@@ -34,7 +34,7 @@
 #define  __TANK_H
 
 #include "sounds.h"
-#include "tankvufo.h"
+#include "tvu_defs.h"
 
 class tank_t
 {
@@ -43,7 +43,7 @@ class tank_t
 
         /* movement and position */
         void move(void);
-        void set_direction(const direction_t dir);
+        void set_direction(const Tvu::Direction dir);
         uint8_t get_pos(void);
         uint8_t get_tanks_killed(void);
 
@@ -52,7 +52,7 @@ class tank_t
         bool was_shot_fired(void) const;
         void shoot(void);
         void end_shot(void);
-        bool update_shot_hit(const pos_t ufo_pos);
+        bool update_shot_hit(const Tvu::Pos ufo_pos);
 
         /* flaming status */
         bool is_on_fire(void) const;
@@ -62,8 +62,8 @@ class tank_t
 
     private:
         uint8_t x;              /* leftmost tank coordinate */
-        direction_t direction;  /* direction of next tank move */
-        pos_t shot_pos;         /* x & y coordinate of tank shot */
+        Tvu::Direction direction;  /* direction of next tank move */
+        Tvu::Pos shot_pos;      /* x & y coordinate of tank shot */
         int min_shot_y;         /* minimum y coordinate of shot */
         bool shot_hit;          /* true if the ufo was just hit (+ displayed) */
         uint8_t on_fire;        /* 0 when not on fire, otherwise flame count */

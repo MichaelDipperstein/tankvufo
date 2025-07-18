@@ -60,11 +60,11 @@ int main(void)
     }
 
     /* vic-20 sized window for the game field */
-    win_x = (COLS - RowsAndCols::V20_COLS) / 2;
-    win_y = (LINES - RowsAndCols::V20_ROWS) / 2;
+    win_x = (COLS - Tvu::V20_COLS) / 2;
+    win_y = (LINES - Tvu::V20_ROWS) / 2;
 
-    result = tvu->MakeV20Win(RowsAndCols::V20_ROWS,
-        RowsAndCols::V20_COLS, win_y, win_x);
+    result = tvu->MakeV20Win(Tvu::V20_ROWS,
+        Tvu::V20_COLS, win_y, win_x);
 
     if (false == result)
     {
@@ -74,9 +74,9 @@ int main(void)
     }
 
     /* window for volume meter */
-    win_y = (LINES - RowsAndCols::VOL_ROWS) / 2;
-    win_x += RowsAndCols::V20_COLS + RowsAndCols::VOL_COLS;
-    result = tvu->MakeVolWin(RowsAndCols::VOL_ROWS, RowsAndCols::VOL_COLS,
+    win_y = (LINES - Tvu::VOL_ROWS) / 2;
+    win_x += Tvu::V20_COLS + Tvu::VOL_COLS;
+    result = tvu->MakeVolWin(Tvu::VOL_ROWS, Tvu::VOL_COLS,
         win_y, win_x);
 
     if (false == result)

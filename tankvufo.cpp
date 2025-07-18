@@ -84,8 +84,8 @@ TankVUfo::~TankVUfo(void)
 
 void TankVUfo::PrintScore()
 {
-    mvwprintw(v20Win, RowsAndCols::SCORE_ROW, 5, "%d", tank->get_tanks_killed());
-    mvwprintw(v20Win, RowsAndCols::SCORE_ROW, 15, "%d", ufo->get_ufos_killed());
+    mvwprintw(v20Win, Tvu::SCORE_ROW, 5, "%d", tank->get_tanks_killed());
+    mvwprintw(v20Win, Tvu::SCORE_ROW, 15, "%d", ufo->get_ufos_killed());
     Refresh();
 }
 
@@ -199,11 +199,11 @@ bool TankVUfo::InitializeVehicles(sound_data_t *sound_data)
     bool result;
     result = false;
 
-    tank = new tank_t(v20Win, RowsAndCols::SCORE_ROW + 1, sound_data);
+    tank = new tank_t(v20Win, Tvu::SCORE_ROW + 1, sound_data);
 
     if (nullptr != tank)
     {
-        ufo = new ufo_t(v20Win, RowsAndCols::UFO_TOP, RowsAndCols::UFO_BOTTOM,
+        ufo = new ufo_t(v20Win, Tvu::UFO_TOP, Tvu::UFO_BOTTOM,
             sound_data);
 
         if (nullptr != ufo)
@@ -273,7 +273,7 @@ int TankVUfo::HandleKeyPress()
     float vol;
 
     nodelay(v20Win, TRUE); /* make sure we're in no delay mode */
-    tank->set_direction(DIR_NONE);
+    tank->set_direction(Tvu::DIR_NONE);
     ch = 0;
 
     while (ERR != ch)
@@ -294,7 +294,7 @@ int TankVUfo::HandleKeyPress()
             case 'z':
                 if (!tank->is_on_fire())
                 {
-                    tank->set_direction(DIR_LEFT);
+                    tank->set_direction(Tvu::DIR_LEFT);
                 }
                 break;
 
@@ -302,7 +302,7 @@ int TankVUfo::HandleKeyPress()
             case 'c':
                 if (!tank->is_on_fire())
                 {
-                    tank->set_direction(DIR_RIGHT);
+                    tank->set_direction(Tvu::DIR_RIGHT);
                 }
                 break;
 
@@ -382,11 +382,11 @@ void TankVUfo::CheckUfoShot()
 {
     int dx;
     bool hit;
-    pos_t shot_pos;
+    Tvu::Pos shot_pos;
 
     shot_pos = ufo->get_shot_pos();
 
-    if (shot_pos.y < RowsAndCols::TANK_GUN_ROW)
+    if (shot_pos.y < Tvu::TANK_GUN_ROW)
     {
         /* shot is above the tank */
         return;
@@ -396,7 +396,7 @@ void TankVUfo::CheckUfoShot()
     hit = false;
 
     /* check for hit by row */
-    if (RowsAndCols::TANK_GUN_ROW == shot_pos.y)
+    if (Tvu::TANK_GUN_ROW == shot_pos.y)
     {
         /* gun barrel row */
         if (3 == dx)
@@ -404,7 +404,7 @@ void TankVUfo::CheckUfoShot()
             hit = true;
         }
     }
-    else if (RowsAndCols::TANK_TURRET_ROW == shot_pos.y)
+    else if (Tvu::TANK_TURRET_ROW == shot_pos.y)
     {
         /* turret row */
         if ((2 == dx) || (3 == dx))
@@ -412,7 +412,7 @@ void TankVUfo::CheckUfoShot()
             hit = true;
         }
     }
-    else if (RowsAndCols::TANK_TREAD_ROW == shot_pos.y)
+    else if (Tvu::TANK_TREAD_ROW == shot_pos.y)
     {
         /* tread row */
         if ((dx > 0) && (dx < 5))

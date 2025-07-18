@@ -33,8 +33,8 @@
 #ifndef  __UFO_H
 #define  __UFO_H
 
-#include "tankvufo.h"
 #include "sounds.h"
+#include "tvu_defs.h"
 
 class ufo_t
 {
@@ -43,7 +43,7 @@ class ufo_t
 
         /* ufo shot movement and information */
         void move(void);
-        pos_t get_pos(void) const;
+        Tvu::Pos get_pos(void) const;
         uint8_t get_ufos_killed(void) const;
 
         /* start falling direction and sound */
@@ -51,20 +51,20 @@ class ufo_t
 
         /* ufo shot movement and information */
         void move_shot(void);
-        pos_t get_shot_pos(void) const;
+        Tvu::Pos get_shot_pos(void) const;
         void clear_shot(bool erase);
         bool is_shot_falling(void) const;
         bool is_shot_exploding(void) const;
         int update_shot_phase(void);
 
     private:
-        pos_t pos;                  /* column and row containing the ufo */
+        Tvu::Pos pos;               /* column and row containing the ufo */
         int upper_limit;            /* top of ufo travel */
         int lower_limit;            /* bottom of ufo travel */
-        direction_t direction;      /* direction that the UFO is moving */
+        Tvu::Direction direction;      /* direction that the UFO is moving */
         uint8_t ufo_hit_ground;     /* 0 when not on fire, otherwise flame count */
-        pos_t shot_pos;             /* x and y coordinate of ufo shot */
-        direction_t shot_direction; /* direction the ufo shot is moving */
+        Tvu::Pos shot_pos;          /* x and y coordinate of ufo shot */
+        Tvu::Direction shot_direction; /* direction the ufo shot is moving */
         uint8_t shot_hit_ground;    /* 0 if false, otherwise phase of explosion */
         uint8_t number_died;        /* number of ufos that died (tank score) */
         WINDOW *win;                /* ncurses window for the ufo and its shot */

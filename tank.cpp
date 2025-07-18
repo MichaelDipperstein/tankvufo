@@ -61,10 +61,10 @@ void tank_t::move(void)
     {
         /* done with fire, restart on left */
         on_fire = 0;
-        direction = DIR_NONE;
-        mvwaddstr(win, RowsAndCols::TANK_GUN_ROW, x + 3, " ");
-        mvwaddstr(win, RowsAndCols::TANK_TURRET_ROW, x + 1, "    ");
-        mvwaddstr(win, RowsAndCols::TANK_TREAD_ROW, x, "      ");
+        direction = Tvu::DIR_NONE;
+        mvwaddstr(win, Tvu::TANK_GUN_ROW, x + 3, " ");
+        mvwaddstr(win, Tvu::TANK_TURRET_ROW, x + 1, "    ");
+        mvwaddstr(win, Tvu::TANK_TREAD_ROW, x, "      ");
         x = 0;
         number_died += 1;
         select_sound(sound_data, SOUND_OFF);
@@ -73,33 +73,33 @@ void tank_t::move(void)
     if (on_fire)
     {
         on_fire += 1;
-        mvwaddstr(win, RowsAndCols::TANK_GUN_ROW, x + 3, " ");
+        mvwaddstr(win, Tvu::TANK_GUN_ROW, x + 3, " ");
 
         wattron(win, COLOR_PAIR(3));       /* fire color */
 
         if (on_fire % 2)
         {
-            mvwaddstr(win, RowsAndCols::TANK_TURRET_ROW, x + 1, "◣◣◣◣");
+            mvwaddstr(win, Tvu::TANK_TURRET_ROW, x + 1, "◣◣◣◣");
         }
         else
         {
-            mvwaddstr(win, RowsAndCols::TANK_TURRET_ROW, x + 1, "◢◢◢◢");
+            mvwaddstr(win, Tvu::TANK_TURRET_ROW, x + 1, "◢◢◢◢");
         }
 
         wattroff(win, COLOR_PAIR(3));
-        mvwaddstr(win, RowsAndCols::TANK_TREAD_ROW, x, "▕OOOO▏");
+        mvwaddstr(win, Tvu::TANK_TREAD_ROW, x, "▕OOOO▏");
         wrefresh(win);
         return;
     }
 
-    if (DIR_NONE == direction)
+    if (Tvu::DIR_NONE == direction)
     {
         /* redraw without moving */
-        mvwaddstr(win, RowsAndCols::TANK_GUN_ROW, x + 3, "▖");
-        mvwaddstr(win, RowsAndCols::TANK_TURRET_ROW, x + 1, "▁██▁");
-        mvwaddstr(win, RowsAndCols::TANK_TREAD_ROW, x, "▕OOOO▏");
+        mvwaddstr(win, Tvu::TANK_GUN_ROW, x + 3, "▖");
+        mvwaddstr(win, Tvu::TANK_TURRET_ROW, x + 1, "▁██▁");
+        mvwaddstr(win, Tvu::TANK_TREAD_ROW, x, "▕OOOO▏");
     }
-    else if (DIR_LEFT == direction)
+    else if (Tvu::DIR_LEFT == direction)
     {
         if (x == 0)
         {
@@ -109,11 +109,11 @@ void tank_t::move(void)
 
         /* move to the left, add a trailing space to erase the old */
         x -= 1;
-        mvwaddstr(win, RowsAndCols::TANK_GUN_ROW, x + 3, "▖ ");
-        mvwaddstr(win, RowsAndCols::TANK_TURRET_ROW, x + 1, "▁██▁ ");
-        mvwaddstr(win, RowsAndCols::TANK_TREAD_ROW, x, "▕OOOO▏ ");
+        mvwaddstr(win, Tvu::TANK_GUN_ROW, x + 3, "▖ ");
+        mvwaddstr(win, Tvu::TANK_TURRET_ROW, x + 1, "▁██▁ ");
+        mvwaddstr(win, Tvu::TANK_TREAD_ROW, x, "▕OOOO▏ ");
     }
-    else if (DIR_RIGHT == direction)
+    else if (Tvu::DIR_RIGHT == direction)
     {
         if (x == cols - 6)
         {
@@ -122,9 +122,9 @@ void tank_t::move(void)
         }
 
         /* move to the right, add a leading space to erase the old */
-        mvwaddstr(win, RowsAndCols::TANK_GUN_ROW, x + 3, " ▖");
-        mvwaddstr(win, RowsAndCols::TANK_TURRET_ROW, x + 1, " ▁██▁");
-        mvwaddstr(win, RowsAndCols::TANK_TREAD_ROW, x, " ▕OOOO▏");
+        mvwaddstr(win, Tvu::TANK_GUN_ROW, x + 3, " ▖");
+        mvwaddstr(win, Tvu::TANK_TURRET_ROW, x + 1, " ▁██▁");
+        mvwaddstr(win, Tvu::TANK_TREAD_ROW, x, " ▕OOOO▏");
         x += 1;
     }
 
@@ -133,7 +133,7 @@ void tank_t::move(void)
 }
 
 
-void tank_t::set_direction(const direction_t dir)
+void tank_t::set_direction(const Tvu::Direction dir)
 {
     direction = dir;
 }
@@ -158,7 +158,7 @@ void tank_t::move_shot(void)
         return;     /* there's no shot */
     }
 
-    if (shot_pos.y != RowsAndCols::TANK_SHOT_START_ROW)
+    if (shot_pos.y != Tvu::TANK_SHOT_START_ROW)
     {
         /* erase old shot if it hasn't been overwritten */
         cchar_t c;
@@ -171,7 +171,7 @@ void tank_t::move_shot(void)
             /* move shot up */
             shot_pos.y--;
         }
-        else if (shot_pos.y == (RowsAndCols::TANK_SHOT_START_ROW - 1))
+        else if (shot_pos.y == (Tvu::TANK_SHOT_START_ROW - 1))
         {
             /* delete the muzzle flash */
             mvwaddch(win, shot_pos.y + 1, shot_pos.x, ' ');
@@ -214,7 +214,7 @@ bool tank_t::was_shot_fired(void) const
 void tank_t::shoot(void)
 {
     shot_pos.x = x + 3;
-    shot_pos.y = RowsAndCols::TANK_SHOT_START_ROW;
+    shot_pos.y = Tvu::TANK_SHOT_START_ROW;
 }
 
 
@@ -225,7 +225,7 @@ void tank_t::end_shot(void)
 }
 
 
-bool tank_t::update_shot_hit(const pos_t ufo_pos)
+bool tank_t::update_shot_hit(const Tvu::Pos ufo_pos)
 {
     bool just_hit;
 

@@ -25,6 +25,7 @@ GNU GPL.
 | explode.h  | Definition of tank shot explosion sound |
 | Makefile   | GNU Makefile for this project (assumes gcc compiler and pkg-config) |
 | main.cpp   | Source to handle all of the game logic |
+| on_fire.h  | Definition of fire sound effect |
 | README.MD  | This file |
 | sound_data.h | Header including all sound effects |
 | sounds.h   | Header for sound effect functions |
@@ -33,8 +34,8 @@ GNU GPL.
 | tank.cpp   | Source for tank and tank shot functions |
 | tankvufo.h | Header for all of the game elements |
 | tankvufo.cpp | Source to handle all of the game elements |
-| on_fire.h  | Definition of fire sound effect |
 | tank_shot.h | Definition of tank shot sound effect |
+| tvu_defs.h | Definitions of types and values used by this game |
 | ufo.h      | Header for ufo and tank shot functions |
 | ufo.cpp    | Source for ufo and tank shot functions |
 | ufo_falling.h | Definition of ufo falling sound effect |
