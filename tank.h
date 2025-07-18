@@ -36,42 +36,42 @@
 #include "sounds.h"
 #include "tvu_defs.h"
 
-class tank_t
+class Tank
 {
     public:
-        tank_t(WINDOW *window, const int min_y, sound_data_t *sd);
+        Tank(WINDOW *window, const int minY, sound_data_t *sd);
 
         /* movement and position */
-        void move(void);
-        void set_direction(const Tvu::Direction dir);
-        uint8_t get_pos(void);
-        uint8_t get_tanks_killed(void);
+        void Move(void);
+        void SetDirection(const Tvu::Direction dir);
+        uint8_t GetPos(void);
+        uint8_t GetTanksKilled(void);
 
         /* tank shot movement and position */
-        void move_shot(void);
-        bool was_shot_fired(void) const;
-        void shoot(void);
-        void end_shot(void);
-        bool update_shot_hit(const Tvu::Pos ufo_pos);
+        void MoveShot(void);
+        bool WasShotFired(void) const;
+        void Shoot(void);
+        void EndShot(void);
+        bool UpdateShotHit(const Tvu::Pos ufoPos);
 
         /* flaming status */
-        bool is_on_fire(void) const;
-        void set_on_fire(const bool of);
+        bool IsOnFire(void) const;
+        void SetOnFire(const bool of);
 
-        sound_data_t* get_sound_data(void) const;
+        sound_data_t* GetSoundData(void) const;
 
     private:
         uint8_t x;              /* leftmost tank coordinate */
         Tvu::Direction direction;  /* direction of next tank move */
-        Tvu::Pos shot_pos;      /* x & y coordinate of tank shot */
-        int min_shot_y;         /* minimum y coordinate of shot */
-        bool shot_hit;          /* true if the ufo was just hit (+ displayed) */
-        uint8_t on_fire;        /* 0 when not on fire, otherwise flame count */
-        uint8_t number_died;    /* number of tanks that died (ufo score) */
+        Tvu::Pos shotPos;       /* x & y coordinate of tank shot */
+        int minShotY;           /* minimum y coordinate of shot */
+        bool shotHit;           /* true if the ufo was just hit (+ displayed) */
+        uint8_t onFire;         /* 0 when not on fire, otherwise flame count */
+        uint8_t numberDied;     /* number of tanks that died (ufo score) */
         WINDOW* win;            /* ncurses window for the tank and its shot */
         int rows;               /* window rows */
         int cols;               /* window columns */
-        sound_data_t *sound_data;
+        sound_data_t *soundData;
 };
 
 #endif /* ndef  __TANKVUFO_H */

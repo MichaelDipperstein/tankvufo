@@ -72,8 +72,8 @@ class TankVUfo
         int volRows;
         int volCols;
 
-        tank_t *tank;
-        ufo_t *ufo;
+        Tank *tank;
+        Ufo *ufo;
 
         void CheckTankShot(void);
         void CheckUfoShot(void);

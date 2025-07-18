@@ -84,8 +84,8 @@ TankVUfo::~TankVUfo(void)
 
 void TankVUfo::PrintScore()
 {
-    mvwprintw(v20Win, Tvu::SCORE_ROW, 5, "%d", tank->get_tanks_killed());
-    mvwprintw(v20Win, Tvu::SCORE_ROW, 15, "%d", ufo->get_ufos_killed());
+    mvwprintw(v20Win, Tvu::SCORE_ROW, 5, "%d", tank->GetTanksKilled());
+    mvwprintw(v20Win, Tvu::SCORE_ROW, 15, "%d", ufo->GetUfosKilled());
     Refresh();
 }
 
@@ -199,11 +199,11 @@ bool TankVUfo::InitializeVehicles(sound_data_t *sound_data)
     bool result;
     result = false;
 
-    tank = new tank_t(v20Win, Tvu::SCORE_ROW + 1, sound_data);
+    tank = new Tank(v20Win, Tvu::SCORE_ROW + 1, sound_data);
 
     if (nullptr != tank)
     {
-        ufo = new ufo_t(v20Win, Tvu::UFO_TOP, Tvu::UFO_BOTTOM,
+        ufo = new Ufo(v20Win, Tvu::UFO_TOP, Tvu::UFO_BOTTOM,
             sound_data);
 
         if (nullptr != ufo)
@@ -218,21 +218,21 @@ bool TankVUfo::InitializeVehicles(sound_data_t *sound_data)
 
 void TankVUfo::MoveTank(void)
 {
-    tank->move();
+    tank->Move();
 }
 
 
 void TankVUfo::MoveUfo(void)
 {
-    ufo->move();
+    ufo->Move();
 }
 
 
 void TankVUfo::UpdateTankShot(void)
 {
-    if (tank->was_shot_fired())
+    if (tank->WasShotFired())
     {
-        tank->move_shot();
+        tank->MoveShot();
 
         /* check for ufo hit */
         CheckTankShot();
@@ -243,14 +243,14 @@ void TankVUfo::UpdateTankShot(void)
 void TankVUfo::UpdateUfoShot(void)
 {
     /* move ufo shot if need (shot exists and isn't exploding) */
-    ufo->move_shot();
+    ufo->MoveShot();
 
-    if (ufo->is_shot_exploding())
+    if (ufo->IsShotExploding())
     {
         int clean_up;
 
         /* shot is exploding on the ground, animate it */
-        clean_up = ufo->update_shot_phase();
+        clean_up = ufo->UpdateShotPhase();
 
         if (clean_up)
         {
@@ -259,7 +259,7 @@ void TankVUfo::UpdateUfoShot(void)
             MoveTank();
         }
     }
-    else if (ufo->is_shot_falling())
+    else if (ufo->IsShotFalling())
     {
         /* check for tank hit */
         CheckUfoShot();
@@ -273,7 +273,7 @@ int TankVUfo::HandleKeyPress()
     float vol;
 
     nodelay(v20Win, TRUE); /* make sure we're in no delay mode */
-    tank->set_direction(Tvu::DIR_NONE);
+    tank->SetDirection(Tvu::DIR_NONE);
     ch = 0;
 
     while (ERR != ch)
@@ -292,39 +292,39 @@ int TankVUfo::HandleKeyPress()
 
             case 'Z':
             case 'z':
-                if (!tank->is_on_fire())
+                if (!tank->IsOnFire())
                 {
-                    tank->set_direction(Tvu::DIR_LEFT);
+                    tank->SetDirection(Tvu::DIR_LEFT);
                 }
                 break;
 
             case 'C':
             case 'c':
-                if (!tank->is_on_fire())
+                if (!tank->IsOnFire())
                 {
-                    tank->set_direction(Tvu::DIR_RIGHT);
+                    tank->SetDirection(Tvu::DIR_RIGHT);
                 }
                 break;
 
             case 'B':
             case 'b':
                 /* shoot */
-                if (!tank->was_shot_fired() && !tank->is_on_fire())
+                if (!tank->WasShotFired() && !tank->IsOnFire())
                 {
-                    sound_error_t sound_error;
-                    sound_data_t *sound_data;
+                    sound_error_t soundError;
+                    sound_data_t *soundData;
 
                     /* there isn't a shot, so take it */
-                    tank->shoot();
+                    tank->Shoot();
 
                     /* play sound */
-                    sound_data = tank->get_sound_data();
-                    select_sound(sound_data, SOUND_TANK_SHOT);
-                    sound_error = restart_sound_stream(sound_data);
+                    soundData = tank->GetSoundData();
+                    select_sound(soundData, SOUND_TANK_SHOT);
+                    soundError = restart_sound_stream(soundData);
 
-                    if (0 != sound_error)
+                    if (0 != soundError)
                     {
-                        handle_error(sound_error);
+                        handle_error(soundError);
                     }
                 }
                 break;
@@ -332,14 +332,14 @@ int TankVUfo::HandleKeyPress()
             case '+':
             case '=':
                 /* increase the base volume */
-                vol = increment_volume(tank->get_sound_data());
+                vol = increment_volume(tank->GetSoundData());
                 ShowVolumeLevel(vol);
                 break;
 
             case '-':
             case '_':
                 /* decrease the base volume */
-                vol = decrement_volume(tank->get_sound_data());
+                vol = decrement_volume(tank->GetSoundData());
                 ShowVolumeLevel(vol);
                 break;
 
@@ -356,22 +356,22 @@ void TankVUfo::CheckTankShot()
 {
     bool justHit;
 
-    justHit = tank->update_shot_hit(ufo->get_pos());
+    justHit = tank->UpdateShotHit(ufo->GetPos());
 
     if (true == justHit)
     {
         /* just hit ufo */
-        sound_error_t sound_error;
+        sound_error_t soundError;
 
-        sound_error = ufo->set_falling();
+        soundError = ufo->SetFalling();
 
-        if (0 != sound_error)
+        if (0 != soundError)
         {
-            handle_error(sound_error);
+            handle_error(soundError);
         }
 
         /* ufo shot magically disappears when ufo is hit */
-        ufo->clear_shot(true);
+        ufo->ClearShot(true);
     }
 
     wrefresh(v20Win);
@@ -384,7 +384,7 @@ void TankVUfo::CheckUfoShot()
     bool hit;
     Tvu::Pos shotPos;
 
-    shotPos = ufo->get_shot_pos();
+    shotPos = ufo->GetShotPos();
 
     if (shotPos.y < Tvu::TANK_GUN_ROW)
     {
@@ -392,7 +392,7 @@ void TankVUfo::CheckUfoShot()
         return;
     }
 
-    dx = shotPos.x - tank->get_pos();
+    dx = shotPos.x - tank->GetPos();
     hit = false;
 
     /* check for hit by row */
@@ -424,20 +424,20 @@ void TankVUfo::CheckUfoShot()
     if (hit)
     {
         /* record tank hit, start fire sound, stop ufo shot */
-        sound_error_t sound_error;
-        sound_data_t *sound_data;
+        sound_error_t soundError;
+        sound_data_t *soundData;
 
-        tank->set_on_fire(true);
+        tank->SetOnFire(true);
 
-        sound_data = tank->get_sound_data();
-        select_sound(sound_data, SOUND_ON_FIRE);
-        sound_error = restart_sound_stream(sound_data);
+        soundData = tank->GetSoundData();
+        select_sound(soundData, SOUND_ON_FIRE);
+        soundError = restart_sound_stream(soundData);
 
-        if (0 != sound_error)
+        if (0 != soundError)
         {
-            handle_error(sound_error);
+            handle_error(soundError);
         }
 
-        ufo->clear_shot(false);
+        ufo->ClearShot(false);
     }
 }

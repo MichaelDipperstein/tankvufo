@@ -40,41 +40,41 @@
 static const cchar_t GROUND_CHAR = {WA_NORMAL, L"▔", 0};
 static const cchar_t UFO_SHOT_CHAR = {WA_NORMAL, L"●", 0};
 
-ufo_t::ufo_t(WINDOW *window, int upper_lim, int lower_lim, sound_data_t *sd)
+Ufo::Ufo(WINDOW *window, int upperLim, int lowerLim, sound_data_t *sd)
 {
     /* start without a ufo and no shot */
     pos.x = 0;
     pos.y = 0;
-    upper_limit = upper_lim;
-    lower_limit = lower_lim;
+    upperLimit = upperLim;
+    lowerLimit = lowerLim;
     direction = Tvu::DIR_NONE;
-    ufo_hit_ground = 0;
-    shot_pos.x = -1;
-    shot_pos.y = -1;
-    shot_direction = Tvu::DIR_NONE;
-    shot_hit_ground = 0;
-    number_died = 0;
+    ufoHitGround = 0;
+    shotPos.x = -1;
+    shotPos.y = -1;
+    shotDirection = Tvu::DIR_NONE;
+    shotHitGround = 0;
+    numberDied = 0;
     win = window;
     getmaxyx(window, rows, cols);
-    sound_data = sd;
+    soundData = sd;
 
     srand((unsigned int)time(NULL));    /* seed the random number generator */
 }
 
 
-void ufo_t::move(void)
+void Ufo::Move(void)
 {
     switch (direction)
     {
         case Tvu::DIR_NONE:
-            if (Tvu::DIR_NONE != shot_direction)
+            if (Tvu::DIR_NONE != shotDirection)
             {
                 /* a shot is still falling, hold off */
                 break;
             }
 
             /* no ufo or shot make a ufo */
-            pos.y = upper_limit + (rand() % (lower_limit - upper_limit));
+            pos.y = upperLimit + (rand() % (lowerLimit - upperLimit));
 
             if (rand() % 2)
             {
@@ -89,13 +89,13 @@ void ufo_t::move(void)
                 direction = Tvu::DIR_LEFT;
             }
 
-            ufo_shot_decision();
+            UfoShotDecision();
             mvwaddstr(win, pos.y, pos.x, "<*>");
             break;
 
         case Tvu::DIR_RIGHT:
             /* ufo is moving right */
-            if ((lower_limit == pos.y) && (cols - 3 == pos.x))
+            if ((lowerLimit == pos.y) && (cols - 3 == pos.x))
             {
                 /* we're at the bottom , done with this one */
                 mvwaddstr(win, pos.y, pos.x, "   ");
@@ -120,7 +120,7 @@ void ufo_t::move(void)
                 pos.x++;
             }
 
-            ufo_shot_decision();
+            UfoShotDecision();
             break;
 
         case Tvu::DIR_LEFT:
@@ -133,7 +133,7 @@ void ufo_t::move(void)
                 /* go up a row */
                 pos.y--;
 
-                if (upper_limit > pos.y)
+                if (upperLimit > pos.y)
                 {
                     /* we're at the top, done with this one */
                     pos.x = 0;
@@ -154,7 +154,7 @@ void ufo_t::move(void)
                 mvwaddstr(win, pos.y, pos.x, "<*> ");
             }
 
-            ufo_shot_decision();
+            UfoShotDecision();
             break;
 
         case Tvu::DIR_FALLING_RIGHT:
@@ -180,12 +180,12 @@ void ufo_t::move(void)
             {
                 /* we're at the bottom, done with this one */
                 direction = Tvu::DIR_LANDED;
-                ufo_hit_ground = 0;
-                select_sound(sound_data, SOUND_ON_FIRE);
+                ufoHitGround = 0;
+                select_sound(soundData, SOUND_ON_FIRE);
             }
             else
             {
-                next_ufo_sound(sound_data);
+                next_ufo_sound(soundData);
             }
             break;
 
@@ -212,19 +212,19 @@ void ufo_t::move(void)
             {
                 /* we're at the bottom, done with this one */
                 direction = Tvu::DIR_LANDED;
-                ufo_hit_ground = 0;
-                select_sound(sound_data, SOUND_ON_FIRE);
+                ufoHitGround = 0;
+                select_sound(soundData, SOUND_ON_FIRE);
             }
             else
             {
-                next_ufo_sound(sound_data);
+                next_ufo_sound(soundData);
             }
             break;
 
         case Tvu::DIR_LANDED:
-            if (10 == ufo_hit_ground)
+            if (10 == ufoHitGround)
             {
-                ufo_hit_ground = 0;
+                ufoHitGround = 0;
                 direction = Tvu::DIR_NONE;
                 mvwaddstr(win, pos.y - 1, pos.x, "   ");
                 mvwaddstr(win, pos.y, pos.x, "   ");
@@ -233,16 +233,16 @@ void ufo_t::move(void)
                 mvwhline_set(win, rows - 1, 0, &GROUND_CHAR, cols);
 
                 /* stop the fire sound */
-                select_sound(sound_data, SOUND_OFF);
+                select_sound(soundData, SOUND_OFF);
 
-                number_died += 1;      /* credit tank with kill */
+                numberDied += 1;      /* credit tank with kill */
             }
             else
             {
-                ufo_hit_ground += 1;
+                ufoHitGround += 1;
                 wattron(win, COLOR_PAIR(3));       /* fire color */
 
-                if (ufo_hit_ground % 2)
+                if (ufoHitGround % 2)
                 {
                     mvwaddstr(win, pos.y - 1, pos.x, "◣◣◣");
                 }
@@ -263,21 +263,21 @@ void ufo_t::move(void)
 }
 
 
-Tvu::Pos ufo_t::get_pos(void) const
+Tvu::Pos Ufo::GetPos(void) const
 {
     return pos;
 }
 
 
-uint8_t ufo_t::get_ufos_killed(void) const
+uint8_t Ufo::GetUfosKilled(void) const
 {
-    return number_died;
+    return numberDied;
 }
 
 
-sound_error_t ufo_t::set_falling(void)
+sound_error_t Ufo::SetFalling(void)
 {
-    sound_error_t sound_error;
+    sound_error_t soundError;
 
     if (Tvu::DIR_LEFT == direction)
     {
@@ -289,16 +289,16 @@ sound_error_t ufo_t::set_falling(void)
     }
 
     /* start the ufo falling sound */
-    next_ufo_sound(sound_data);
-    sound_error = restart_sound_stream(sound_data);
+    next_ufo_sound(soundData);
+    soundError = restart_sound_stream(soundData);
 
-    return sound_error;
+    return soundError;
 }
 
 
-void ufo_t::ufo_shot_decision(void)
+void Ufo::UfoShotDecision(void)
 {
-    if ((Tvu::DIR_NONE != shot_direction) || (shot_hit_ground))
+    if ((Tvu::DIR_NONE != shotDirection) || (shotHitGround))
     {
         /* there's already a shot */
         return;
@@ -330,150 +330,150 @@ void ufo_t::ufo_shot_decision(void)
     /* 1 in 3 chance of non-shooter to shoot */
     if (0 == (rand() % 3))
     {
-        /* prime the position for move_shot()  */
+        /* prime the position for MoveShot()  */
         if (Tvu::DIR_RIGHT == direction)
         {
             /* shot will head right */
-            shot_direction = Tvu::DIR_FALLING_RIGHT;
-            shot_pos.x = pos.x;
+            shotDirection = Tvu::DIR_FALLING_RIGHT;
+            shotPos.x = pos.x;
         }
         else
         {
             /* shot will head left */
-            shot_direction = Tvu::DIR_FALLING_LEFT;
-            shot_pos.x = pos.x + 2;
+            shotDirection = Tvu::DIR_FALLING_LEFT;
+            shotPos.x = pos.x + 2;
         }
 
-        shot_pos.y = pos.y;           /* UFO row */
+        shotPos.y = pos.y;           /* UFO row */
     }
 }
 
 
-void ufo_t::move_shot(void)
+void Ufo::MoveShot(void)
 {
     cchar_t c;
 
-    if ((Tvu::DIR_NONE == shot_direction) || (0 != shot_hit_ground))
+    if ((Tvu::DIR_NONE == shotDirection) || (0 != shotHitGround))
     {
         /* there is no shot to move */
         return;
     }
 
     /* erase old shot if it hasn't been overwritten */
-    mvwin_wch(win, shot_pos.y, shot_pos.x, &c);
+    mvwin_wch(win, shotPos.y, shotPos.x, &c);
 
     if (UFO_SHOT_CHAR.chars[0] == c.chars[0])
     {
-        mvwaddch(win, shot_pos.y, shot_pos.x, ' ');
+        mvwaddch(win, shotPos.y, shotPos.x, ' ');
     }
 
-    if (Tvu::TANK_TREAD_ROW == shot_pos.y)
+    if (Tvu::TANK_TREAD_ROW == shotPos.y)
     {
         /* done with shot */
-        shot_direction = Tvu::DIR_NONE;
-        shot_hit_ground = 1;
+        shotDirection = Tvu::DIR_NONE;
+        shotHitGround = 1;
         wrefresh(win);
         return;
     }
 
     /* update shot position */
-    shot_pos.y++;
+    shotPos.y++;
 
-    if (Tvu::DIR_FALLING_RIGHT == shot_direction)
+    if (Tvu::DIR_FALLING_RIGHT == shotDirection)
     {
         /* shot is headed right */
-        shot_pos.x++;
+        shotPos.x++;
     }
-    else if (Tvu::DIR_FALLING_LEFT == shot_direction)
+    else if (Tvu::DIR_FALLING_LEFT == shotDirection)
     {
         /* shot is headed left */
-        shot_pos.x--;
+        shotPos.x--;
     }
 
     /* draw the new shot */
-    mvwadd_wch(win, shot_pos.y, shot_pos.x, &UFO_SHOT_CHAR);
+    mvwadd_wch(win, shotPos.y, shotPos.x, &UFO_SHOT_CHAR);
     wrefresh(win);
 }
 
 
-Tvu::Pos ufo_t::get_shot_pos(void) const
+Tvu::Pos Ufo::GetShotPos(void) const
 {
-    return shot_pos;
+    return shotPos;
 }
 
 
-void ufo_t::clear_shot(bool erase)
+void Ufo::ClearShot(bool erase)
 {
-    if (erase && (-1 != shot_pos.y))
+    if (erase && (-1 != shotPos.y))
     {
         /* erase any existing shot */
         cchar_t c;
 
         /* erase old shot if it hasn't been overwritten */
-        mvwin_wch(win, shot_pos.y, shot_pos.x, &c);
+        mvwin_wch(win, shotPos.y, shotPos.x, &c);
 
         if (UFO_SHOT_CHAR.chars[0] == c.chars[0])
         {
-            mvwaddch(win, shot_pos.y, shot_pos.x, ' ');
+            mvwaddch(win, shotPos.y, shotPos.x, ' ');
         }
     }
 
     /* clear shot data */
-    shot_pos.x = -1;
-    shot_pos.y = -1;
-    shot_direction = Tvu::DIR_NONE;
+    shotPos.x = -1;
+    shotPos.y = -1;
+    shotDirection = Tvu::DIR_NONE;
 }
 
 
-bool ufo_t::is_shot_falling(void) const
+bool Ufo::IsShotFalling(void) const
 {
-    return (Tvu::DIR_NONE != shot_direction);
+    return (Tvu::DIR_NONE != shotDirection);
 }
 
 
-bool ufo_t::is_shot_exploding(void) const
+bool Ufo::IsShotExploding(void) const
 {
-    return (0 != shot_hit_ground);
+    return (0 != shotHitGround);
 }
 
 
-int ufo_t::update_shot_phase(void)
+int Ufo::UpdateShotPhase(void)
 {
     int clean_up = 0;
     int8_t shot_x;
 
-    shot_x = shot_pos.x;
+    shot_x = shotPos.x;
 
-    switch (shot_hit_ground)
+    switch (shotHitGround)
     {
         case 1:
             /* just lines */
-            shot_hit_ground++;
+            shotHitGround++;
             mvwaddstr(win, Tvu::TANK_TREAD_ROW, shot_x - 2, "╲ │ ╱");
             break;
 
         case 2:
             /* full explosion */
-            shot_hit_ground++;
+            shotHitGround++;
             mvwaddstr(win, Tvu::TANK_TURRET_ROW, shot_x - 3, "•• • ••");
             mvwaddstr(win, Tvu::TANK_TREAD_ROW, shot_x - 2, "╲ │ ╱");
             break;
 
         case 3:
             /* dots */
-            shot_hit_ground++;
+            shotHitGround++;
             mvwaddstr(win, Tvu::TANK_TURRET_ROW, shot_x - 3, "•• • ••");
             mvwaddstr(win, Tvu::TANK_TREAD_ROW, shot_x - 2, "     ");
             break;
 
         case 4:
             /* clean-up */
-            shot_hit_ground = 0;
+            shotHitGround = 0;
             mvwaddstr(win, Tvu::TANK_TURRET_ROW, shot_x - 3, "       ");
             mvwaddstr(win, Tvu::TANK_TREAD_ROW, shot_x - 2, "     ");
-            shot_pos.x = -1;
-            shot_pos.y = -1;
-            shot_direction = Tvu::DIR_NONE;
+            shotPos.x = -1;
+            shotPos.y = -1;
+            shotDirection = Tvu::DIR_NONE;
 
             /* indicate need to redraw ground and tank */
             clean_up = 1;

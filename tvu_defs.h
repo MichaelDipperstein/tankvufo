@@ -34,8 +34,8 @@
 #define  __TVU_DEFS_H
 
 /* forward declarations */
-class tank_t;
-class ufo_t;
+class Tank;
+class Ufo;
 typedef struct sound_data_t sound_data_t;
 
 namespace Tvu

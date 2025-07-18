@@ -39,45 +39,45 @@
 static const cchar_t TANK_SHOT_CHAR = {WA_NORMAL, L"▪", 0};
 static const cchar_t BOX_CHAR = {WA_NORMAL, L"█", 0};
 
-tank_t::tank_t(WINDOW *window, const int min_y, sound_data_t *sd)
+Tank::Tank(WINDOW *window, const int minY, sound_data_t *sd)
 {
     /* start with tank on left and no shot */
     x = 0;
-    end_shot();
-    min_shot_y = min_y;
-    shot_hit = false;
-    on_fire = 0;
-    number_died = 0;
+    EndShot();
+    minShotY = minY;
+    shotHit = false;
+    onFire = 0;
+    numberDied = 0;
     win = window;
     getmaxyx(window, rows, cols);
-    sound_data = sd;
+    soundData = sd;
 }
 
 
 /* move the tank or flames of hit tank and record death */
-void tank_t::move(void)
+void Tank::Move(void)
 {
-    if (10 == on_fire)
+    if (10 == onFire)
     {
         /* done with fire, restart on left */
-        on_fire = 0;
+        onFire = 0;
         direction = Tvu::DIR_NONE;
         mvwaddstr(win, Tvu::TANK_GUN_ROW, x + 3, " ");
         mvwaddstr(win, Tvu::TANK_TURRET_ROW, x + 1, "    ");
         mvwaddstr(win, Tvu::TANK_TREAD_ROW, x, "      ");
         x = 0;
-        number_died += 1;
-        select_sound(sound_data, SOUND_OFF);
+        numberDied += 1;
+        select_sound(soundData, SOUND_OFF);
     }
 
-    if (on_fire)
+    if (onFire)
     {
-        on_fire += 1;
+        onFire += 1;
         mvwaddstr(win, Tvu::TANK_GUN_ROW, x + 3, " ");
 
         wattron(win, COLOR_PAIR(3));       /* fire color */
 
-        if (on_fire % 2)
+        if (onFire % 2)
         {
             mvwaddstr(win, Tvu::TANK_TURRET_ROW, x + 1, "◣◣◣◣");
         }
@@ -133,161 +133,159 @@ void tank_t::move(void)
 }
 
 
-void tank_t::set_direction(const Tvu::Direction dir)
+void Tank::SetDirection(const Tvu::Direction dir)
 {
     direction = dir;
 }
 
 
-uint8_t tank_t::get_pos(void)
+uint8_t Tank::GetPos(void)
 {
     return x;
 }
 
 
-uint8_t tank_t::get_tanks_killed(void)
+uint8_t Tank::GetTanksKilled(void)
 {
-    return number_died;
+    return numberDied;
 }
 
 
-void tank_t::move_shot(void)
+void Tank::MoveShot(void)
 {
-    if ((shot_pos.y < 0) || (shot_hit))
+    if ((shotPos.y < 0) || (shotHit))
     {
         return;     /* there's no shot */
     }
 
-    if (shot_pos.y != Tvu::TANK_SHOT_START_ROW)
+    if (shotPos.y != Tvu::TANK_SHOT_START_ROW)
     {
         /* erase old shot if it hasn't been overwritten */
         cchar_t c;
-        mvwin_wch(win, shot_pos.y, shot_pos.x, &c);
+        mvwin_wch(win, shotPos.y, shotPos.x, &c);
 
         if (TANK_SHOT_CHAR.chars[0] == c.chars[0])
         {
-            mvwaddch(win, shot_pos.y, shot_pos.x, ' ');
+            mvwaddch(win, shotPos.y, shotPos.x, ' ');
 
             /* move shot up */
-            shot_pos.y--;
+            shotPos.y--;
         }
-        else if (shot_pos.y == (Tvu::TANK_SHOT_START_ROW - 1))
+        else if (shotPos.y == (Tvu::TANK_SHOT_START_ROW - 1))
         {
             /* delete the muzzle flash */
-            mvwaddch(win, shot_pos.y + 1, shot_pos.x, ' ');
+            mvwaddch(win, shotPos.y + 1, shotPos.x, ' ');
         }
 
-        if (shot_pos.y >= min_shot_y)
+        if (shotPos.y >= minShotY)
         {
             /* draw new shot */
-            mvwadd_wch(win, shot_pos.y, shot_pos.x, &TANK_SHOT_CHAR);
+            mvwadd_wch(win, shotPos.y, shotPos.x, &TANK_SHOT_CHAR);
         }
         else
         {
             /* done with shot */
-            shot_pos.x = -1;
-            shot_pos.y = -1;
+            EndShot();
 
             /* stop shot sound */
-            select_sound(sound_data, SOUND_OFF);
+            select_sound(soundData, SOUND_OFF);
         }
     }
     else
     {
         /* muzzle flash */
         wattron(win, COLOR_PAIR(3));       /* fire color */
-        mvwadd_wch(win, shot_pos.y, shot_pos.x, &BOX_CHAR);
+        mvwadd_wch(win, shotPos.y, shotPos.x, &BOX_CHAR);
         wattroff(win, COLOR_PAIR(3));
-        shot_pos.y--;
+        shotPos.y--;
     }
 
     wrefresh(win);
 }
 
 
-bool tank_t::was_shot_fired(void) const
+bool Tank::WasShotFired(void) const
 {
-    return (shot_pos.y != -1);
+    return (shotPos.y != -1);
 }
 
 
-void tank_t::shoot(void)
+void Tank::Shoot(void)
 {
-    shot_pos.x = x + 3;
-    shot_pos.y = Tvu::TANK_SHOT_START_ROW;
+    shotPos.x = x + 3;
+    shotPos.y = Tvu::TANK_SHOT_START_ROW;
 }
 
 
-void tank_t::end_shot(void)
+void Tank::EndShot(void)
 {
-    shot_pos.x = -1;
-    shot_pos.y = -1;
+    shotPos.x = -1;
+    shotPos.y = -1;
 }
 
 
-bool tank_t::update_shot_hit(const Tvu::Pos ufo_pos)
+bool Tank::UpdateShotHit(const Tvu::Pos ufoPos)
 {
-    bool just_hit;
+    bool justHit;
 
-    just_hit = false;
+    justHit = false;
 
-    if (true == shot_hit)
+    if (true == shotHit)
     {
         /* clear explosion shot */
-        mvwaddch(win, shot_pos.y - 1, shot_pos.x, ' ');
-        mvwaddstr(win, shot_pos.y, shot_pos.x - 1, "   ");
-        mvwaddch(win, shot_pos.y + 1, shot_pos.x, ' ');
+        mvwaddch(win, shotPos.y - 1, shotPos.x, ' ');
+        mvwaddstr(win, shotPos.y, shotPos.x - 1, "   ");
+        mvwaddch(win, shotPos.y + 1, shotPos.x, ' ');
 
-        end_shot();
-        shot_hit = false;
+        EndShot();
+        shotHit = false;
     }
-    else if (shot_pos.y == ufo_pos.y)
+    else if (shotPos.y == ufoPos.y)
     {
         /* same row */
         int dx;
 
-        dx = shot_pos.x - ufo_pos.x;
+        dx = shotPos.x - ufoPos.x;
 
         if ((dx >= 0) && (dx <= 2))
         {
             /* hit */
-            shot_hit = true;
-            just_hit = true;
+            shotHit = true;
+            justHit = true;
 
             wattron(win, COLOR_PAIR(3));       /* fire color */
-            mvwaddstr(win, shot_pos.y - 1, shot_pos.x, "█");
-            mvwaddstr(win, shot_pos.y, shot_pos.x - 1, "███");
-            mvwaddstr(win, shot_pos.y + 1, shot_pos.x, "█");
+            mvwaddstr(win, shotPos.y - 1, shotPos.x, "█");
+            mvwaddstr(win, shotPos.y, shotPos.x - 1, "███");
+            mvwaddstr(win, shotPos.y + 1, shotPos.x, "█");
             wattroff(win, COLOR_PAIR(3));
         }
     }
 
-    return just_hit;
+    return justHit;
 }
 
 
-bool tank_t::is_on_fire(void) const
+bool Tank::IsOnFire(void) const
 {
-    /* on_fire is a counter 0 == not on fire */
-    return on_fire != 0;
+    return onFire != 0;     /* onFire is a counter. 0 is not on fire */
 }
 
 
-void tank_t::set_on_fire(const bool of)
+void Tank::SetOnFire(const bool of)
 {
-    /* on_fire is a counter 0 == not on fire */
+    /* onFire is a counter. 0 is not on fire */
     if (of)
     {
-        on_fire = 1;
+        onFire = 1;
     }
     else
     {
-        on_fire = 0;
+        onFire = 0;
     }
 }
 
 
-sound_data_t* tank_t::get_sound_data(void) const
+sound_data_t* Tank::GetSoundData(void) const
 {
-    return sound_data;
+    return soundData;
 }

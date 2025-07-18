@@ -36,43 +36,43 @@
 #include "sounds.h"
 #include "tvu_defs.h"
 
-class ufo_t
+class Ufo
 {
     public:
-        ufo_t(WINDOW *window, int upper_lim, int lower_lim, sound_data_t *sd);
+        Ufo(WINDOW *window, int upperLim, int lowerLim, sound_data_t *sd);
 
         /* ufo shot movement and information */
-        void move(void);
-        Tvu::Pos get_pos(void) const;
-        uint8_t get_ufos_killed(void) const;
+        void Move(void);
+        Tvu::Pos GetPos(void) const;
+        uint8_t GetUfosKilled(void) const;
 
         /* start falling direction and sound */
-        sound_error_t set_falling(void);
+        sound_error_t SetFalling(void);
 
         /* ufo shot movement and information */
-        void move_shot(void);
-        Tvu::Pos get_shot_pos(void) const;
-        void clear_shot(bool erase);
-        bool is_shot_falling(void) const;
-        bool is_shot_exploding(void) const;
-        int update_shot_phase(void);
+        void MoveShot(void);
+        Tvu::Pos GetShotPos(void) const;
+        void ClearShot(bool erase);
+        bool IsShotFalling(void) const;
+        bool IsShotExploding(void) const;
+        int UpdateShotPhase(void);
 
     private:
         Tvu::Pos pos;               /* column and row containing the ufo */
-        int upper_limit;            /* top of ufo travel */
-        int lower_limit;            /* bottom of ufo travel */
-        Tvu::Direction direction;      /* direction that the UFO is moving */
-        uint8_t ufo_hit_ground;     /* 0 when not on fire, otherwise flame count */
-        Tvu::Pos shot_pos;          /* x and y coordinate of ufo shot */
-        Tvu::Direction shot_direction; /* direction the ufo shot is moving */
-        uint8_t shot_hit_ground;    /* 0 if false, otherwise phase of explosion */
-        uint8_t number_died;        /* number of ufos that died (tank score) */
+        int upperLimit;             /* top of ufo travel */
+        int lowerLimit;             /* bottom of ufo travel */
+        Tvu::Direction direction;   /* direction that the UFO is moving */
+        uint8_t ufoHitGround;       /* 0 when not on fire, otherwise flame count */
+        Tvu::Pos shotPos;           /* x and y coordinate of ufo shot */
+        Tvu::Direction shotDirection; /* direction the ufo shot is moving */
+        uint8_t shotHitGround;      /* 0 if false, otherwise phase of explosion */
+        uint8_t numberDied;         /* number of ufos that died (tank score) */
         WINDOW *win;                /* ncurses window for the ufo and its shot */
         int rows;                   /* window rows */
         int cols;                   /* window columns */
-        sound_data_t *sound_data;
+        sound_data_t *soundData;
 
-        void ufo_shot_decision(void);
+        void UfoShotDecision(void);
 };
 
 #endif /* ndef  __UFO_H */
