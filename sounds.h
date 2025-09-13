@@ -33,11 +33,6 @@
 #ifndef  __SOUNDS_H
 #define  __SOUNDS_H
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
 #include <portaudio.h>
 static const int SAMPLE_RATE = 44100;
 
@@ -60,25 +55,33 @@ typedef struct sound_data_t
     PaStream *stream;
 } sound_data_t;
 
+
 typedef PaError sound_error_t;
 
-void HandleError(sound_error_t error);
 
-sound_error_t InitializeSounds(void);
-void EndSounds(void);
+class Sounds
+{
+    public:
+        Sounds(void);
+        ~Sounds(void);
 
-int CreateSoundStream(sound_data_t *data, float volume);
-sound_error_t RestartSoundStream(sound_data_t *data);
-sound_error_t CloseSoundStream(sound_data_t *data);
+        void HandleError(void);
 
-void SelectSound(sound_data_t *data, sound_t sound);
-void NextUfoSound(sound_data_t *data);
+        void CreateSoundStream(float volume);
+        void RestartSoundStream(void);
+        void CloseSoundStream(void);
 
-float IncrementVolume(sound_data_t *data);
-float DecrementVolume(sound_data_t *data);
+        void SelectSound(sound_t sound);
+        void NextUfoSound(void);
 
-#ifdef __cplusplus
-}
-#endif
+        float IncrementVolume(void);
+        float DecrementVolume(void);
+
+        sound_error_t GetError(void);
+
+    private:
+        sound_error_t lastError;
+        sound_data_t soundData;
+};
 
 #endif /* ndef  __SOUNDS_H */

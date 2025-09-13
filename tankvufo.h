@@ -34,11 +34,12 @@
 #define  __TANKVUFO_H
 
 #include "tvu_defs.h"
+class Sounds;
 
 class TankVUfo
 {
     public:
-        TankVUfo(void);
+        TankVUfo(Sounds &sound_obj);
         ~TankVUfo(void);
 
         /* vic-20 window methods */
@@ -52,7 +53,7 @@ class TankVUfo
         void DrawVolumeLevelBox(void);
         void ShowVolumeLevel(const float volume);
 
-        bool InitializeVehicles(sound_data_t *sound_data);
+        bool InitializeVehicles(Sounds &sound_obj);
 
         /* move and update objects */
         void MoveTank(void);
@@ -74,6 +75,8 @@ class TankVUfo
 
         Tank *tank;
         Ufo *ufo;
+
+        Sounds &soundObj;
 
         void CheckTankShot(void);
         void CheckUfoShot(void);

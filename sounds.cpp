@@ -1,7 +1,7 @@
 /***************************************************************************
 *                              Tank Versus UFO
 *
-*   File    : sounds.h
+*   File    : sounds.cpp
 *   Purpose : PortAudio based sound library for Tank Versus UFO
 *   Author  : Michael Dipperstein
 *   Date    : February 7, 2021
@@ -177,18 +177,10 @@ static int SoundCallback(const void *inputBuffer,
 }
 
 
-void HandleError(sound_error_t error)
-{
-    Pa_Terminate();
-    fprintf(stderr, "Error [%d]: %s\n", error, Pa_GetErrorText(error));
-}
-
-
-sound_error_t InitializeSounds(void)
+Sounds::Sounds(void)
 {
     int newStdErr;
     int oldStdErr;
-    PaError error;
 
     /* hide ALSA error during initialization (stderr -> /dev/null) */
     fflush(stderr);
@@ -197,146 +189,148 @@ sound_error_t InitializeSounds(void)
     dup2(newStdErr, 2);
     close(newStdErr);
 
-    error = Pa_Initialize();
+    lastError = Pa_Initialize();
 
     /* restore stderr */
     fflush(stderr);
     dup2(oldStdErr, 2);
     close(oldStdErr);
-
-    return error;
 }
 
 
-void EndSounds(void)
+Sounds::~Sounds(void)
 {
     Pa_Terminate();
 }
 
 
-int CreateSoundStream(sound_data_t *data, float volume)
+void Sounds::HandleError(void)
 {
-    sound_error_t err;
-
-    data->volume = volume;
-    data->phase = 0;
-    data->sound = SOUND_OFF;
-
-    err = Pa_OpenDefaultStream(&(data->stream), 0, 2, paFloat32, SAMPLE_RATE,
-        paFramesPerBufferUnspecified, SoundCallback, data);
-
-    return err;
+    fprintf(stderr, "Error [%d]: %s\n", lastError, Pa_GetErrorText(lastError));
+    Pa_Terminate();
 }
 
 
-sound_error_t RestartSoundStream(sound_data_t *data)
+void Sounds::CreateSoundStream(float volume)
 {
-    PaError result;
+    soundData.volume = volume;
+    soundData.phase = 0;
+    soundData.sound = SOUND_OFF;
 
-    result = Pa_IsStreamStopped(data->stream);
+    lastError = Pa_OpenDefaultStream(&(soundData.stream), 0, 2, paFloat32,
+        SAMPLE_RATE, paFramesPerBufferUnspecified, SoundCallback,
+        &soundData);
+}
 
-    if (result < 0)
+
+void Sounds::RestartSoundStream(void)
+{
+    lastError = Pa_IsStreamStopped(soundData.stream);
+
+    if (lastError >= 0)
     {
-        return result;
-    }
-
-    if (0 == result)
-    {
-        /* stream was not stopped, stop it */
-        result = Pa_StopStream(data->stream);
-
-        if(paNoError != result)
+        /* not an error */
+        if (paNoError == lastError)
         {
-            return result;
+            /* stream was not stopped, stop it */
+            lastError = Pa_StopStream(soundData.stream);
         }
+
+        if (lastError >= 0)
+        {
+            /* restart the sound stream */
+        }
+
+        soundData.phase = 0;
+        lastError = Pa_StartStream(soundData.stream);
     }
-
-    data->phase = 0;
-    result = Pa_StartStream(data->stream);
-
-    return result;
 }
 
 
-sound_error_t CloseSoundStream(sound_data_t *data)
+void Sounds::CloseSoundStream(void)
 {
-    return Pa_CloseStream(data->stream);
+    lastError = Pa_CloseStream(soundData.stream);
 }
 
 
-void SelectSound(sound_data_t *data, sound_t sound)
+void Sounds::SelectSound(sound_t sound)
 {
-    if (sound == data->sound)
+    if (sound == soundData.sound)
     {
         /* already selected */
         return;
     }
 
-    data->phase = 0;
-    data->sound = sound;
+    soundData.phase = 0;
+    soundData.sound = sound;
 
     if (SOUND_OFF == sound)
     {
-        Pa_AbortStream(data->stream);
+        lastError = Pa_AbortStream(soundData.stream);
     }
 }
 
 
-void NextUfoSound(sound_data_t *data)
+void Sounds::NextUfoSound(void)
 {
     /* explosion or toggle between frequencies */
-    if ((SOUND_OFF == data->sound) || (SOUND_TANK_SHOT == data->sound))
+    if ((SOUND_OFF == soundData.sound) || (SOUND_TANK_SHOT == soundData.sound))
     {
         /* start with the explosion */
-        SelectSound(data, SOUND_EXPLODE);
+        SelectSound(SOUND_EXPLODE);
     }
-    else if (SOUND_LOW_FREQ == data->sound)
+    else if (SOUND_LOW_FREQ == soundData.sound)
     {
         /* switch to high frequency falling sound */
-        SelectSound(data, SOUND_HIGH_FREQ);
+        SelectSound(SOUND_HIGH_FREQ);
     }
-    else if (SOUND_HIGH_FREQ == data->sound)
+    else if (SOUND_HIGH_FREQ == soundData.sound)
     {
         /* switch to low frequency falling sound */
-        SelectSound(data, SOUND_LOW_FREQ);
+        SelectSound(SOUND_LOW_FREQ);
     }
 }
 
 
-float IncrementVolume(sound_data_t *data)
+float Sounds::IncrementVolume(void)
 {
     float new_volume;
 
-    new_volume = data->volume + 0.1;
+    new_volume = soundData.volume + 0.1;
 
     if (new_volume > 1.0)
     {
-        data->volume = 1.0;
+        soundData.volume = 1.0;
     }
     else
     {
-        data->volume = new_volume;
+        soundData.volume = new_volume;
     }
 
-    return data->volume;
+    return soundData.volume;
 }
 
 
-float DecrementVolume(sound_data_t *data)
+float Sounds::DecrementVolume(void)
 {
     float new_volume;
 
-    new_volume = data->volume - 0.1;
+    new_volume = soundData.volume - 0.1;
 
     if (new_volume < 0.0)
     {
-        data->volume = 0.0;
+        soundData.volume = 0.0;
     }
     else
     {
-        data->volume = new_volume;
+        soundData.volume = new_volume;
     }
 
-    return data->volume;
+    return soundData.volume;
 }
 
+
+sound_error_t Sounds::GetError(void)
+{
+    return lastError;
+}

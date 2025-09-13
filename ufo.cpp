@@ -40,7 +40,8 @@
 static const cchar_t GROUND_CHAR = {WA_NORMAL, L"▔", 0};
 static const cchar_t UFO_SHOT_CHAR = {WA_NORMAL, L"●", 0};
 
-Ufo::Ufo(WINDOW *window, int upperLim, int lowerLim, sound_data_t *sd)
+Ufo::Ufo(WINDOW *window, int upperLim, int lowerLim, Sounds &sound_obj) :
+    soundObj(sound_obj)
 {
     /* start without a ufo and no shot */
     pos.x = 0;
@@ -56,7 +57,6 @@ Ufo::Ufo(WINDOW *window, int upperLim, int lowerLim, sound_data_t *sd)
     numberDied = 0;
     win = window;
     getmaxyx(window, rows, cols);
-    soundData = sd;
 
     srand((unsigned int)time(NULL));    /* seed the random number generator */
 }
@@ -181,11 +181,11 @@ void Ufo::Move(void)
                 /* we're at the bottom, done with this one */
                 direction = Tvu::DIR_LANDED;
                 ufoHitGround = 0;
-                SelectSound(soundData, SOUND_ON_FIRE);
+                soundObj.SelectSound(SOUND_ON_FIRE);
             }
             else
             {
-                NextUfoSound(soundData);
+                soundObj.NextUfoSound();
             }
             break;
 
@@ -213,11 +213,11 @@ void Ufo::Move(void)
                 /* we're at the bottom, done with this one */
                 direction = Tvu::DIR_LANDED;
                 ufoHitGround = 0;
-                SelectSound(soundData, SOUND_ON_FIRE);
+                soundObj.SelectSound(SOUND_ON_FIRE);
             }
             else
             {
-                NextUfoSound(soundData);
+                soundObj.NextUfoSound();
             }
             break;
 
@@ -233,7 +233,7 @@ void Ufo::Move(void)
                 mvwhline_set(win, rows - 1, 0, &GROUND_CHAR, cols);
 
                 /* stop the fire sound */
-                SelectSound(soundData, SOUND_OFF);
+                soundObj.SelectSound(SOUND_OFF);
 
                 numberDied += 1;      /* credit tank with kill */
             }
@@ -277,8 +277,6 @@ uint8_t Ufo::GetUfosKilled(void) const
 
 sound_error_t Ufo::SetFalling(void)
 {
-    sound_error_t soundError;
-
     if (Tvu::DIR_LEFT == direction)
     {
         direction = Tvu::DIR_FALLING_LEFT;
@@ -289,8 +287,16 @@ sound_error_t Ufo::SetFalling(void)
     }
 
     /* start the ufo falling sound */
-    NextUfoSound(soundData);
-    soundError = RestartSoundStream(soundData);
+    soundObj.NextUfoSound();
+    soundObj.RestartSoundStream();
+
+    sound_error_t soundError;
+    soundError = soundObj.GetError();
+
+    if (0 != soundError)
+    {
+        soundObj.HandleError();
+    }
 
     return soundError;
 }

@@ -39,7 +39,7 @@
 class Tank
 {
     public:
-        Tank(WINDOW *window, const int minY, sound_data_t *sd);
+        Tank(WINDOW *window, const int minY, Sounds &sound_obj);
 
         /* movement and position */
         void Move(void);
@@ -58,8 +58,6 @@ class Tank
         bool IsOnFire(void) const;
         void SetOnFire(const bool of);
 
-        sound_data_t* GetSoundData(void) const;
-
     private:
         uint8_t x;              /* leftmost tank coordinate */
         Tvu::Direction direction;  /* direction of next tank move */
@@ -71,7 +69,7 @@ class Tank
         WINDOW* win;            /* ncurses window for the tank and its shot */
         int rows;               /* window rows */
         int cols;               /* window columns */
-        sound_data_t *soundData;
+        Sounds &soundObj;
 };
 
 #endif /* ndef  __TANKVUFO_H */

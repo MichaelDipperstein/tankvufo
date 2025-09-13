@@ -46,12 +46,33 @@ constexpr float VOLUME = 0.5;    /* base volume for sounds */
 
 int main(void)
 {
+    /* initialize all of the sound stuff */
+    sound_error_t soundError;
+    Sounds soundObj;
+
+    soundError = soundObj.GetError();
+
+    if (0 != soundError)
+    {
+        soundObj.HandleError();
+        return soundError;
+    }
+
+    soundObj.CreateSoundStream(VOLUME);
+    soundError = soundObj.GetError();
+
+    if (0 != soundError)
+    {
+        soundObj.HandleError();
+        return soundError;
+    }
+
+    /* setup the ncurses field-of-play */
     TankVUfo *tvu;
     int winX, winY;
     bool result;
 
-    /* setup the ncurses field-of-play */
-    tvu = new TankVUfo;
+    tvu = new TankVUfo(soundObj);
 
     if (nullptr == tvu)
     {
@@ -94,35 +115,12 @@ int main(void)
     tvu->DrawVolumeLevelBox();
     tvu->ShowVolumeLevel(VOLUME);
 
-    /* initialize all of the sound stuff */
-    sound_data_t soundData;
-    sound_error_t soundError;
-
-    soundError = InitializeSounds();
-
-    if (0 != soundError)
-    {
-        HandleError(soundError);
-        delete tvu;
-        return soundError;
-    }
-
-    soundError = CreateSoundStream(&soundData, VOLUME);
-
-    if (0 != soundError)
-    {
-        HandleError(soundError);
-        delete tvu;
-        return soundError;
-    }
-
     /* create and initialize the tank and ufo */
-    result = tvu->InitializeVehicles(&soundData);
+    result = tvu->InitializeVehicles(soundObj);
 
     if (false == result)
     {
-        CloseSoundStream(&soundData);
-        EndSounds();
+        soundObj.CloseSoundStream();
         delete tvu;
         perror("allocating tank or ufo");
         return 1;
@@ -141,8 +139,7 @@ int main(void)
 
     if (fdTimer <= 0)
     {
-        CloseSoundStream(&soundData);
-        EndSounds();
+        soundObj.CloseSoundStream();
         delete tvu;
         perror("creating timerfd");
         return 1;
@@ -156,8 +153,7 @@ int main(void)
 
     if (timerfd_settime(fdTimer, 0, &timeout, 0) != 0)
     {
-        CloseSoundStream(&soundData);
-        EndSounds();
+        soundObj.CloseSoundStream();
         delete tvu;
         perror("setting timerfd");
         return 1;
@@ -205,8 +201,7 @@ int main(void)
         tvu->PrintScore();
     }
 
-    CloseSoundStream(&soundData);
-    EndSounds();
+    soundObj.CloseSoundStream();
     delete tvu;
     return 0;
 }

@@ -27,7 +27,7 @@ tank.o:	tank.cpp tank.h sounds.h tvu_defs.h
 ufo.o:	ufo.cpp ufo.h sounds.h tvu_defs.h
 		$(CPP) $(CFLAGS) -c $< -o $@
 
-sounds.o:	sounds.c sounds.h $(SD_FILES)
+sounds.o:	sounds.cpp sounds.h $(SD_FILES)
 		$(CPP) -c $< -Wall -Wextra `pkg-config portaudio-2.0 --cflags` -o $@
 
 clean:

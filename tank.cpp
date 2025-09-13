@@ -39,7 +39,8 @@
 static const cchar_t TANK_SHOT_CHAR = {WA_NORMAL, L"▪", 0};
 static const cchar_t BOX_CHAR = {WA_NORMAL, L"█", 0};
 
-Tank::Tank(WINDOW *window, const int minY, sound_data_t *sd)
+Tank::Tank(WINDOW *window, const int minY, Sounds &sound_obj) :
+    soundObj(sound_obj)
 {
     /* start with tank on left and no shot */
     x = 0;
@@ -50,7 +51,6 @@ Tank::Tank(WINDOW *window, const int minY, sound_data_t *sd)
     numberDied = 0;
     win = window;
     getmaxyx(window, rows, cols);
-    soundData = sd;
 }
 
 
@@ -60,14 +60,13 @@ void Tank::Move(void)
     if (10 == onFire)
     {
         /* done with fire, restart on left */
-        onFire = 0;
+        SetOnFire(false);
         direction = Tvu::DIR_NONE;
         mvwaddstr(win, Tvu::TANK_GUN_ROW, x + 3, " ");
         mvwaddstr(win, Tvu::TANK_TURRET_ROW, x + 1, "    ");
         mvwaddstr(win, Tvu::TANK_TREAD_ROW, x, "      ");
         x = 0;
         numberDied += 1;
-        SelectSound(soundData, SOUND_OFF);
     }
 
     if (onFire)
@@ -188,7 +187,7 @@ void Tank::MoveShot(void)
             EndShot();
 
             /* stop shot sound */
-            SelectSound(soundData, SOUND_OFF);
+            soundObj.SelectSound(SOUND_OFF);
         }
     }
     else
@@ -214,6 +213,18 @@ void Tank::Shoot(void)
 {
     shotPos.x = x + 3;
     shotPos.y = Tvu::TANK_SHOT_START_ROW;
+
+    /* play sound */
+    soundObj.SelectSound(SOUND_TANK_SHOT);
+    soundObj.RestartSoundStream();
+
+    sound_error_t soundError;
+    soundError = soundObj.GetError();
+
+    if (0 != soundError)
+    {
+        soundObj.HandleError();
+    }
 }
 
 
@@ -277,15 +288,21 @@ void Tank::SetOnFire(const bool of)
     if (of)
     {
         onFire = 1;
+
+        soundObj.SelectSound(SOUND_ON_FIRE);
+        soundObj.RestartSoundStream();
     }
     else
     {
         onFire = 0;
+        soundObj.SelectSound(SOUND_OFF);
     }
-}
 
+    sound_error_t soundError;
+    soundError = soundObj.GetError();
 
-sound_data_t* Tank::GetSoundData(void) const
-{
-    return soundData;
+    if (0 != soundError)
+    {
+        soundObj.HandleError();
+    }
 }

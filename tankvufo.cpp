@@ -40,7 +40,7 @@
 #include "ufo.h"
 #include "sounds.h"
 
-TankVUfo::TankVUfo(void)
+TankVUfo::TankVUfo(Sounds &sound_obj) : soundObj(sound_obj)
 {
     /* ncurses initialization */
     setlocale(LC_ALL, "");
@@ -194,17 +194,16 @@ void TankVUfo::ShowVolumeLevel(const float volume)
 }
 
 
-bool TankVUfo::InitializeVehicles(sound_data_t *sound_data)
+bool TankVUfo::InitializeVehicles(Sounds &sound_obj)
 {
     bool result;
     result = false;
 
-    tank = new Tank(v20Win, Tvu::SCORE_ROW + 1, sound_data);
+    tank = new Tank(v20Win, Tvu::SCORE_ROW + 1, sound_obj);
 
     if (nullptr != tank)
     {
-        ufo = new Ufo(v20Win, Tvu::UFO_TOP, Tvu::UFO_BOTTOM,
-            sound_data);
+        ufo = new Ufo(v20Win, Tvu::UFO_TOP, Tvu::UFO_BOTTOM, sound_obj);
 
         if (nullptr != ufo)
         {
@@ -311,35 +310,22 @@ int TankVUfo::HandleKeyPress()
                 /* shoot */
                 if (!tank->WasShotFired() && !tank->IsOnFire())
                 {
-                    sound_error_t soundError;
-                    sound_data_t *soundData;
-
                     /* there isn't a shot, so take it */
                     tank->Shoot();
-
-                    /* play sound */
-                    soundData = tank->GetSoundData();
-                    SelectSound(soundData, SOUND_TANK_SHOT);
-                    soundError = RestartSoundStream(soundData);
-
-                    if (0 != soundError)
-                    {
-                        HandleError(soundError);
-                    }
                 }
                 break;
 
             case '+':
             case '=':
                 /* increase the base volume */
-                vol = IncrementVolume(tank->GetSoundData());
+                vol = soundObj.IncrementVolume();
                 ShowVolumeLevel(vol);
                 break;
 
             case '-':
             case '_':
                 /* decrease the base volume */
-                vol = DecrementVolume(tank->GetSoundData());
+                vol = soundObj.DecrementVolume();
                 ShowVolumeLevel(vol);
                 break;
 
@@ -361,14 +347,7 @@ void TankVUfo::CheckTankShot()
     if (true == justHit)
     {
         /* just hit ufo */
-        sound_error_t soundError;
-
-        soundError = ufo->SetFalling();
-
-        if (0 != soundError)
-        {
-            HandleError(soundError);
-        }
+        ufo->SetFalling();
 
         /* ufo shot magically disappears when ufo is hit */
         ufo->ClearShot(true);
@@ -424,20 +403,7 @@ void TankVUfo::CheckUfoShot()
     if (hit)
     {
         /* record tank hit, start fire sound, stop ufo shot */
-        sound_error_t soundError;
-        sound_data_t *soundData;
-
         tank->SetOnFire(true);
-
-        soundData = tank->GetSoundData();
-        SelectSound(soundData, SOUND_ON_FIRE);
-        soundError = RestartSoundStream(soundData);
-
-        if (0 != soundError)
-        {
-            HandleError(soundError);
-        }
-
         ufo->ClearShot(false);
     }
 }
