@@ -181,11 +181,11 @@ void Ufo::Move(void)
                 /* we're at the bottom, done with this one */
                 direction = Tvu::DIR_LANDED;
                 ufoHitGround = 0;
-                select_sound(soundData, SOUND_ON_FIRE);
+                SelectSound(soundData, SOUND_ON_FIRE);
             }
             else
             {
-                next_ufo_sound(soundData);
+                NextUfoSound(soundData);
             }
             break;
 
@@ -213,11 +213,11 @@ void Ufo::Move(void)
                 /* we're at the bottom, done with this one */
                 direction = Tvu::DIR_LANDED;
                 ufoHitGround = 0;
-                select_sound(soundData, SOUND_ON_FIRE);
+                SelectSound(soundData, SOUND_ON_FIRE);
             }
             else
             {
-                next_ufo_sound(soundData);
+                NextUfoSound(soundData);
             }
             break;
 
@@ -233,7 +233,7 @@ void Ufo::Move(void)
                 mvwhline_set(win, rows - 1, 0, &GROUND_CHAR, cols);
 
                 /* stop the fire sound */
-                select_sound(soundData, SOUND_OFF);
+                SelectSound(soundData, SOUND_OFF);
 
                 numberDied += 1;      /* credit tank with kill */
             }
@@ -289,8 +289,8 @@ sound_error_t Ufo::SetFalling(void)
     }
 
     /* start the ufo falling sound */
-    next_ufo_sound(soundData);
-    soundError = restart_sound_stream(soundData);
+    NextUfoSound(soundData);
+    soundError = RestartSoundStream(soundData);
 
     return soundError;
 }

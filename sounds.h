@@ -62,20 +62,20 @@ typedef struct sound_data_t
 
 typedef PaError sound_error_t;
 
-void handle_error(sound_error_t error);
+void HandleError(sound_error_t error);
 
-sound_error_t initialize_sounds(void);
-void end_sounds(void);
+sound_error_t InitializeSounds(void);
+void EndSounds(void);
 
-int create_sound_stream(sound_data_t *data, float volume);
-sound_error_t restart_sound_stream(sound_data_t *data);
-sound_error_t close_sound_stream(sound_data_t *data);
+int CreateSoundStream(sound_data_t *data, float volume);
+sound_error_t RestartSoundStream(sound_data_t *data);
+sound_error_t CloseSoundStream(sound_data_t *data);
 
-void select_sound(sound_data_t *data, sound_t sound);
-void next_ufo_sound(sound_data_t *data);
+void SelectSound(sound_data_t *data, sound_t sound);
+void NextUfoSound(sound_data_t *data);
 
-float increment_volume(sound_data_t *data);
-float decrement_volume(sound_data_t *data);
+float IncrementVolume(sound_data_t *data);
+float DecrementVolume(sound_data_t *data);
 
 #ifdef __cplusplus
 }

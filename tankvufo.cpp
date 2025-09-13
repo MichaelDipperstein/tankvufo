@@ -319,12 +319,12 @@ int TankVUfo::HandleKeyPress()
 
                     /* play sound */
                     soundData = tank->GetSoundData();
-                    select_sound(soundData, SOUND_TANK_SHOT);
-                    soundError = restart_sound_stream(soundData);
+                    SelectSound(soundData, SOUND_TANK_SHOT);
+                    soundError = RestartSoundStream(soundData);
 
                     if (0 != soundError)
                     {
-                        handle_error(soundError);
+                        HandleError(soundError);
                     }
                 }
                 break;
@@ -332,14 +332,14 @@ int TankVUfo::HandleKeyPress()
             case '+':
             case '=':
                 /* increase the base volume */
-                vol = increment_volume(tank->GetSoundData());
+                vol = IncrementVolume(tank->GetSoundData());
                 ShowVolumeLevel(vol);
                 break;
 
             case '-':
             case '_':
                 /* decrease the base volume */
-                vol = decrement_volume(tank->GetSoundData());
+                vol = DecrementVolume(tank->GetSoundData());
                 ShowVolumeLevel(vol);
                 break;
 
@@ -367,7 +367,7 @@ void TankVUfo::CheckTankShot()
 
         if (0 != soundError)
         {
-            handle_error(soundError);
+            HandleError(soundError);
         }
 
         /* ufo shot magically disappears when ufo is hit */
@@ -430,12 +430,12 @@ void TankVUfo::CheckUfoShot()
         tank->SetOnFire(true);
 
         soundData = tank->GetSoundData();
-        select_sound(soundData, SOUND_ON_FIRE);
-        soundError = restart_sound_stream(soundData);
+        SelectSound(soundData, SOUND_ON_FIRE);
+        soundError = RestartSoundStream(soundData);
 
         if (0 != soundError)
         {
-            handle_error(soundError);
+            HandleError(soundError);
         }
 
         ufo->ClearShot(false);

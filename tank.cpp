@@ -67,7 +67,7 @@ void Tank::Move(void)
         mvwaddstr(win, Tvu::TANK_TREAD_ROW, x, "      ");
         x = 0;
         numberDied += 1;
-        select_sound(soundData, SOUND_OFF);
+        SelectSound(soundData, SOUND_OFF);
     }
 
     if (onFire)
@@ -188,7 +188,7 @@ void Tank::MoveShot(void)
             EndShot();
 
             /* stop shot sound */
-            select_sound(soundData, SOUND_OFF);
+            SelectSound(soundData, SOUND_OFF);
         }
     }
     else

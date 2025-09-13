@@ -47,7 +47,7 @@
 ** It may called at interrupt level on some machines so don't do anything
 ** that could mess up the system like calling malloc() or free().
 */
-static int sound_callback(const void *inputBuffer,
+static int SoundCallback(const void *inputBuffer,
     void *outputBuffer,
     unsigned long framesPerBuffer,
     const PaStreamCallbackTimeInfo* timeInfo,
@@ -177,14 +177,14 @@ static int sound_callback(const void *inputBuffer,
 }
 
 
-void handle_error(sound_error_t error)
+void HandleError(sound_error_t error)
 {
     Pa_Terminate();
     fprintf(stderr, "Error [%d]: %s\n", error, Pa_GetErrorText(error));
 }
 
 
-sound_error_t initialize_sounds(void)
+sound_error_t InitializeSounds(void)
 {
     int newStdErr;
     int oldStdErr;
@@ -208,13 +208,13 @@ sound_error_t initialize_sounds(void)
 }
 
 
-void end_sounds(void)
+void EndSounds(void)
 {
     Pa_Terminate();
 }
 
 
-int create_sound_stream(sound_data_t *data, float volume)
+int CreateSoundStream(sound_data_t *data, float volume)
 {
     sound_error_t err;
 
@@ -223,13 +223,13 @@ int create_sound_stream(sound_data_t *data, float volume)
     data->sound = SOUND_OFF;
 
     err = Pa_OpenDefaultStream(&(data->stream), 0, 2, paFloat32, SAMPLE_RATE,
-        paFramesPerBufferUnspecified, sound_callback, data);
+        paFramesPerBufferUnspecified, SoundCallback, data);
 
     return err;
 }
 
 
-sound_error_t restart_sound_stream(sound_data_t *data)
+sound_error_t RestartSoundStream(sound_data_t *data)
 {
     PaError result;
 
@@ -258,13 +258,13 @@ sound_error_t restart_sound_stream(sound_data_t *data)
 }
 
 
-sound_error_t close_sound_stream(sound_data_t *data)
+sound_error_t CloseSoundStream(sound_data_t *data)
 {
     return Pa_CloseStream(data->stream);
 }
 
 
-void select_sound(sound_data_t *data, sound_t sound)
+void SelectSound(sound_data_t *data, sound_t sound)
 {
     if (sound == data->sound)
     {
@@ -282,28 +282,28 @@ void select_sound(sound_data_t *data, sound_t sound)
 }
 
 
-void next_ufo_sound(sound_data_t *data)
+void NextUfoSound(sound_data_t *data)
 {
     /* explosion or toggle between frequencies */
     if ((SOUND_OFF == data->sound) || (SOUND_TANK_SHOT == data->sound))
     {
         /* start with the explosion */
-        select_sound(data, SOUND_EXPLODE);
+        SelectSound(data, SOUND_EXPLODE);
     }
     else if (SOUND_LOW_FREQ == data->sound)
     {
         /* switch to high frequency falling sound */
-        select_sound(data, SOUND_HIGH_FREQ);
+        SelectSound(data, SOUND_HIGH_FREQ);
     }
     else if (SOUND_HIGH_FREQ == data->sound)
     {
         /* switch to low frequency falling sound */
-        select_sound(data, SOUND_LOW_FREQ);
+        SelectSound(data, SOUND_LOW_FREQ);
     }
 }
 
 
-float increment_volume(sound_data_t *data)
+float IncrementVolume(sound_data_t *data)
 {
     float new_volume;
 
@@ -322,7 +322,7 @@ float increment_volume(sound_data_t *data)
 }
 
 
-float decrement_volume(sound_data_t *data)
+float DecrementVolume(sound_data_t *data)
 {
     float new_volume;
 

@@ -98,20 +98,20 @@ int main(void)
     sound_data_t soundData;
     sound_error_t soundError;
 
-    soundError = initialize_sounds();
+    soundError = InitializeSounds();
 
     if (0 != soundError)
     {
-        handle_error(soundError);
+        HandleError(soundError);
         delete tvu;
         return soundError;
     }
 
-    soundError = create_sound_stream(&soundData, VOLUME);
+    soundError = CreateSoundStream(&soundData, VOLUME);
 
     if (0 != soundError)
     {
-        handle_error(soundError);
+        HandleError(soundError);
         delete tvu;
         return soundError;
     }
@@ -121,8 +121,8 @@ int main(void)
 
     if (false == result)
     {
-        close_sound_stream(&soundData);
-        end_sounds();
+        CloseSoundStream(&soundData);
+        EndSounds();
         delete tvu;
         perror("allocating tank or ufo");
         return 1;
@@ -141,8 +141,8 @@ int main(void)
 
     if (fdTimer <= 0)
     {
-        close_sound_stream(&soundData);
-        end_sounds();
+        CloseSoundStream(&soundData);
+        EndSounds();
         delete tvu;
         perror("creating timerfd");
         return 1;
@@ -156,8 +156,8 @@ int main(void)
 
     if (timerfd_settime(fdTimer, 0, &timeout, 0) != 0)
     {
-        close_sound_stream(&soundData);
-        end_sounds();
+        CloseSoundStream(&soundData);
+        EndSounds();
         delete tvu;
         perror("setting timerfd");
         return 1;
@@ -205,8 +205,8 @@ int main(void)
         tvu->PrintScore();
     }
 
-    close_sound_stream(&soundData);
-    end_sounds();
+    CloseSoundStream(&soundData);
+    EndSounds();
     delete tvu;
     return 0;
 }
