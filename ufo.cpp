@@ -40,8 +40,8 @@
 static const cchar_t GROUND_CHAR = {WA_NORMAL, L"▔", 0};
 static const cchar_t UFO_SHOT_CHAR = {WA_NORMAL, L"●", 0};
 
-Ufo::Ufo(WINDOW *window, int upperLim, int lowerLim, Sounds &sound_obj) :
-    soundObj(sound_obj)
+Ufo::Ufo(WINDOW *window, int upperLim, int lowerLim, Sounds &ufo_sounds) :
+    ufoSounds(ufo_sounds)
 {
     /* start without a ufo and no shot */
     pos.x = 0;
@@ -181,11 +181,11 @@ void Ufo::Move(void)
                 /* we're at the bottom, done with this one */
                 direction = Tvu::DIR_LANDED;
                 ufoHitGround = 0;
-                soundObj.SelectSound(SOUND_ON_FIRE);
+                ufoSounds.SelectSound(SOUND_ON_FIRE);
             }
             else
             {
-                soundObj.NextUfoSound();
+                ufoSounds.NextUfoSound();
             }
             break;
 
@@ -213,11 +213,11 @@ void Ufo::Move(void)
                 /* we're at the bottom, done with this one */
                 direction = Tvu::DIR_LANDED;
                 ufoHitGround = 0;
-                soundObj.SelectSound(SOUND_ON_FIRE);
+                ufoSounds.SelectSound(SOUND_ON_FIRE);
             }
             else
             {
-                soundObj.NextUfoSound();
+                ufoSounds.NextUfoSound();
             }
             break;
 
@@ -233,7 +233,7 @@ void Ufo::Move(void)
                 mvwhline_set(win, rows - 1, 0, &GROUND_CHAR, cols);
 
                 /* stop the fire sound */
-                soundObj.SelectSound(SOUND_OFF);
+                ufoSounds.SelectSound(SOUND_OFF);
 
                 numberDied += 1;      /* credit tank with kill */
             }
@@ -287,15 +287,15 @@ sound_error_t Ufo::SetFalling(void)
     }
 
     /* start the ufo falling sound */
-    soundObj.NextUfoSound();
-    soundObj.RestartSoundStream();
+    ufoSounds.NextUfoSound();
+    ufoSounds.RestartSoundStream();
 
     sound_error_t soundError;
-    soundError = soundObj.GetError();
+    soundError = ufoSounds.GetError();
 
     if (0 != soundError)
     {
-        soundObj.HandleError();
+        ufoSounds.HandleError();
     }
 
     return soundError;

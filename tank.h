@@ -39,7 +39,7 @@
 class Tank
 {
     public:
-        Tank(WINDOW *window, const int minY, Sounds &sound_obj);
+        Tank(WINDOW *window, const int minY, Sounds &tank_sounds);
 
         /* movement and position */
         void Move(void);
@@ -69,7 +69,7 @@ class Tank
         WINDOW* win;            /* ncurses window for the tank and its shot */
         int rows;               /* window rows */
         int cols;               /* window columns */
-        Sounds &soundObj;
+        Sounds &tankSounds;     /* sounds object used to control tank sounds */
 };
 
 #endif /* ndef  __TANKVUFO_H */

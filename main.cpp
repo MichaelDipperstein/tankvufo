@@ -40,39 +40,15 @@
 #include <cerrno>
 
 #include "tankvufo.h"
-#include "sounds.h"
-
-constexpr float VOLUME = 0.5;    /* base volume for sounds */
 
 int main(void)
 {
-    /* initialize all of the sound stuff */
-    sound_error_t soundError;
-    Sounds soundObj;
-
-    soundError = soundObj.GetError();
-
-    if (0 != soundError)
-    {
-        soundObj.HandleError();
-        return soundError;
-    }
-
-    soundObj.CreateSoundStream(VOLUME);
-    soundError = soundObj.GetError();
-
-    if (0 != soundError)
-    {
-        soundObj.HandleError();
-        return soundError;
-    }
-
     /* setup the ncurses field-of-play */
     TankVUfo *tvu;
     int winX, winY;
     bool result;
 
-    tvu = new TankVUfo(soundObj);
+    tvu = new TankVUfo();
 
     if (nullptr == tvu)
     {
@@ -84,8 +60,7 @@ int main(void)
     winX = (COLS - Tvu::V20_COLS) / 2;
     winY = (LINES - Tvu::V20_ROWS) / 2;
 
-    result = tvu->MakeV20Win(Tvu::V20_ROWS,
-        Tvu::V20_COLS, winY, winX);
+    result = tvu->MakeV20Win(Tvu::V20_ROWS, Tvu::V20_COLS, winY, winX);
 
     if (false == result)
     {
@@ -113,14 +88,13 @@ int main(void)
 
     /* now draw the volume level box */
     tvu->DrawVolumeLevelBox();
-    tvu->ShowVolumeLevel(VOLUME);
+    tvu->ShowVolumeLevel(TankVUfo::VOLUME);
 
     /* create and initialize the tank and ufo */
-    result = tvu->InitializeVehicles(soundObj);
+    result = tvu->InitializeVehicles();
 
     if (false == result)
     {
-        soundObj.CloseSoundStream();
         delete tvu;
         perror("allocating tank or ufo");
         return 1;
@@ -139,7 +113,6 @@ int main(void)
 
     if (fdTimer <= 0)
     {
-        soundObj.CloseSoundStream();
         delete tvu;
         perror("creating timerfd");
         return 1;
@@ -153,7 +126,6 @@ int main(void)
 
     if (timerfd_settime(fdTimer, 0, &timeout, 0) != 0)
     {
-        soundObj.CloseSoundStream();
         delete tvu;
         perror("setting timerfd");
         return 1;
@@ -201,7 +173,6 @@ int main(void)
         tvu->PrintScore();
     }
 
-    soundObj.CloseSoundStream();
     delete tvu;
     return 0;
 }

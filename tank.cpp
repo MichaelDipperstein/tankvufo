@@ -39,8 +39,8 @@
 static const cchar_t TANK_SHOT_CHAR = {WA_NORMAL, L"▪", 0};
 static const cchar_t BOX_CHAR = {WA_NORMAL, L"█", 0};
 
-Tank::Tank(WINDOW *window, const int minY, Sounds &sound_obj) :
-    soundObj(sound_obj)
+Tank::Tank(WINDOW *window, const int minY, Sounds &tank_sounds) :
+    tankSounds(tank_sounds)
 {
     /* start with tank on left and no shot */
     x = 0;
@@ -187,7 +187,7 @@ void Tank::MoveShot(void)
             EndShot();
 
             /* stop shot sound */
-            soundObj.SelectSound(SOUND_OFF);
+            tankSounds.SelectSound(SOUND_OFF);
         }
     }
     else
@@ -215,15 +215,15 @@ void Tank::Shoot(void)
     shotPos.y = Tvu::TANK_SHOT_START_ROW;
 
     /* play sound */
-    soundObj.SelectSound(SOUND_TANK_SHOT);
-    soundObj.RestartSoundStream();
+    tankSounds.SelectSound(SOUND_TANK_SHOT);
+    tankSounds.RestartSoundStream();
 
     sound_error_t soundError;
-    soundError = soundObj.GetError();
+    soundError = tankSounds.GetError();
 
     if (0 != soundError)
     {
-        soundObj.HandleError();
+        tankSounds.HandleError();
     }
 }
 
@@ -289,20 +289,20 @@ void Tank::SetOnFire(const bool of)
     {
         onFire = 1;
 
-        soundObj.SelectSound(SOUND_ON_FIRE);
-        soundObj.RestartSoundStream();
+        tankSounds.SelectSound(SOUND_ON_FIRE);
+        tankSounds.RestartSoundStream();
     }
     else
     {
         onFire = 0;
-        soundObj.SelectSound(SOUND_OFF);
+        tankSounds.SelectSound(SOUND_OFF);
     }
 
     sound_error_t soundError;
-    soundError = soundObj.GetError();
+    soundError = tankSounds.GetError();
 
     if (0 != soundError)
     {
-        soundObj.HandleError();
+        tankSounds.HandleError();
     }
 }

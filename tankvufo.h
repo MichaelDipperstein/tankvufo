@@ -39,7 +39,7 @@ class Sounds;
 class TankVUfo
 {
     public:
-        TankVUfo(Sounds &sound_obj);
+        TankVUfo(void);
         ~TankVUfo(void);
 
         /* vic-20 window methods */
@@ -53,7 +53,7 @@ class TankVUfo
         void DrawVolumeLevelBox(void);
         void ShowVolumeLevel(const float volume);
 
-        bool InitializeVehicles(Sounds &sound_obj);
+        bool InitializeVehicles(void);
 
         /* move and update objects */
         void MoveTank(void);
@@ -63,6 +63,8 @@ class TankVUfo
 
         int HandleKeyPress(void);
         void Refresh(void) { wrefresh(v20Win); }
+
+        static constexpr float VOLUME = 0.5;    /* base volume for sounds */
 
     private:
         WINDOW *v20Win;
@@ -76,7 +78,7 @@ class TankVUfo
         Tank *tank;
         Ufo *ufo;
 
-        Sounds &soundObj;
+        Sounds *tvuSounds;
 
         void CheckTankShot(void);
         void CheckUfoShot(void);

@@ -40,19 +40,42 @@
 #include "ufo.h"
 #include "sounds.h"
 
-TankVUfo::TankVUfo(Sounds &sound_obj) : soundObj(sound_obj)
+TankVUfo::TankVUfo(void)
 {
-    /* ncurses initialization */
-    setlocale(LC_ALL, "");
-    initscr();
-    start_color();
-    cbreak();
-    noecho();
-    curs_set(0);
+    /* initialize all of the sound stuff */
+    sound_error_t soundError;
+    tvuSounds = new Sounds();
 
-    /* color the background before creating a window */
-    init_pair(1, COLOR_BLACK, COLOR_CYAN);
-    bkgd(COLOR_PAIR(1));
+    soundError = tvuSounds->GetError();
+
+    if (0 != soundError)
+    {
+        tvuSounds->HandleError();
+    }
+    else
+    {
+        tvuSounds->CreateSoundStream(VOLUME);
+        soundError = tvuSounds->GetError();
+
+        if (0 != soundError)
+        {
+            tvuSounds->HandleError();
+        }
+        else
+        {
+            /* ncurses initialization */
+            setlocale(LC_ALL, "");
+            initscr();
+            start_color();
+            cbreak();
+            noecho();
+            curs_set(0);
+
+            /* color the background before creating a window */
+            init_pair(1, COLOR_BLACK, COLOR_CYAN);
+            bkgd(COLOR_PAIR(1));
+        }
+    }
 }
 
 
@@ -78,6 +101,11 @@ TankVUfo::~TankVUfo(void)
     if (ufo != nullptr)
     {
         delete ufo;
+    }
+
+    if (tvuSounds != nullptr)
+    {
+        delete tvuSounds;
     }
 }
 
@@ -194,16 +222,16 @@ void TankVUfo::ShowVolumeLevel(const float volume)
 }
 
 
-bool TankVUfo::InitializeVehicles(Sounds &sound_obj)
+bool TankVUfo::InitializeVehicles()
 {
     bool result;
     result = false;
 
-    tank = new Tank(v20Win, Tvu::SCORE_ROW + 1, sound_obj);
+    tank = new Tank(v20Win, Tvu::SCORE_ROW + 1, *tvuSounds);
 
     if (nullptr != tank)
     {
-        ufo = new Ufo(v20Win, Tvu::UFO_TOP, Tvu::UFO_BOTTOM, sound_obj);
+        ufo = new Ufo(v20Win, Tvu::UFO_TOP, Tvu::UFO_BOTTOM, *tvuSounds);
 
         if (nullptr != ufo)
         {
@@ -318,14 +346,14 @@ int TankVUfo::HandleKeyPress()
             case '+':
             case '=':
                 /* increase the base volume */
-                vol = soundObj.IncrementVolume();
+                vol = tvuSounds->IncrementVolume();
                 ShowVolumeLevel(vol);
                 break;
 
             case '-':
             case '_':
                 /* decrease the base volume */
-                vol = soundObj.DecrementVolume();
+                vol = tvuSounds->DecrementVolume();
                 ShowVolumeLevel(vol);
                 break;
 

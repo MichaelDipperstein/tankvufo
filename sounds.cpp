@@ -30,18 +30,13 @@
 * with this program.  If not, see <http://www.gnu.org/licenses/>.
 *
 ****************************************************************************/
-#include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cerrno>
 #include <unistd.h>
 #include <fcntl.h>
-#include <math.h>
 #include "sounds.h"
 #include "sound_data.h"
-
-#ifndef M_PI
-#define M_PI                (3.14159265)
-#endif
 
 /* This routine will be called by the PortAudio engine when audio is needed.
 ** It may called at interrupt level on some machines so don't do anything
@@ -200,6 +195,7 @@ Sounds::Sounds(void)
 
 Sounds::~Sounds(void)
 {
+    Pa_CloseStream(soundData.stream);
     Pa_Terminate();
 }
 
@@ -207,6 +203,7 @@ Sounds::~Sounds(void)
 void Sounds::HandleError(void)
 {
     fprintf(stderr, "Error [%d]: %s\n", lastError, Pa_GetErrorText(lastError));
+    Pa_CloseStream(soundData.stream);
     Pa_Terminate();
 }
 

@@ -39,7 +39,7 @@
 class Ufo
 {
     public:
-        Ufo(WINDOW *window, int upperLim, int lowerLim, Sounds &sound_obj);
+        Ufo(WINDOW *window, int upperLim, int lowerLim,  Sounds &ufo_sounds);
 
         /* ufo shot movement and information */
         void Move(void);
@@ -70,7 +70,7 @@ class Ufo
         WINDOW *win;                /* ncurses window for the ufo and its shot */
         int rows;                   /* window rows */
         int cols;                   /* window columns */
-        Sounds &soundObj;
+        Sounds &ufoSounds;          /* sounds object used to control ufo sounds */
 
         void UfoShotDecision(void);
 };
